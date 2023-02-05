@@ -150,3 +150,59 @@ class InstructionMemory(FileMap):
         instructions = [instr.strip() for instr in file.readlines()]
         assert len(instructions) < self.size_limit, "too many instructions"
         self.instructions = instructions
+
+
+class Core:
+
+    def __init__(
+        self,
+        scalar_register_file: RegisterFile,
+        vector_register_file: RegisterFile,
+        instruction_mem: InstructionMemory,
+        scalar_data_mem: DataMemory,
+        vector_data_mem: DataMemory,
+    ):
+
+        self.scalar_register_file = scalar_register_file
+        self.vector_register_file = vector_register_file
+        self.instruction_mem = instruction_mem
+        self.scalar_data_mem = scalar_data_mem
+        self.vector_data_mem = vector_data_mem
+
+        self.instruction_mem.load()
+        self.scalar_data_mem.load()
+        self.vector_data_mem.load()
+
+
+if __name__ == "__main__":
+    import sys
+
+    assert len(sys.argv) == 2
+    assert (assembly_program := pathlib.Path(sys.argv[1])).is_file()
+    data_dir = pathlib.PurePath("isa_test_data")
+    vcore = Core(
+        scalar_register_file=RegisterFile(dump_path=data_dir / "SRF.txt",
+                                          n_reg=8,
+                                          word_size=32),
+        vector_register_file=RegisterFile(dump_path=data_dir / "VRF.txt",
+                                          n_reg=8,
+                                          vec_size=64,
+                                          word_size=32),
+        instruction_mem=InstructionMemory(load_path=data_dir / "Code.asm"),
+        scalar_data_mem=DataMemory(load_path=data_dir / "SDMEM.txt",
+                                   dump_path=data_dir / "SDMEMOP.txt",
+                                   address_length=13
+                                   # 32 KB is 2^15 bytes = 2^13 K 32-bit words
+                                  ),
+        vector_data_mem=DataMemory(load_path=data_dir / "VDMEM.txt",
+                                   dump_path=data_dir / "VDMEMOP.txt",
+                                   address_length=17
+                                   # 512 KB is 2^19 bytes = 2^17 K 32-bit words
+                                  ))
+    if dump_all := False:
+        # RegFile
+        vcore.scalar_register_file.dump()
+        vcore.vector_register_file.dump()
+        # Memory
+        vcore.scalar_data_mem.dump()
+        vcore.vector_data_mem.dump()
