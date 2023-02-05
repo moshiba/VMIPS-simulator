@@ -33,6 +33,62 @@ class FileMap(abc.ABC):
         raise NotImplementedError
 
 
+class RegisterFile(FileMap):
+
+    def __init__(
+            self,
+            /,
+            dump_path: str,
+            n_reg: int,  # number of registers
+            vec_size: int = 1,  # number of words in a vector register
+            word_size: int = 32,  # number of bits in a word
+    ):
+        super().__init__(load_path="", dump_path=dump_path)
+        self.n_reg = n_reg
+        self.vec_size = vec_size
+        self.word_size = word_size
+        # TODO: do get/set min/max value check
+        self._data = [
+            [0x0 for scalar in range(vec_size)] for reg in range(n_reg)
+        ]
+
+    def __getitem__(self, index) -> int | list[int]:
+        if self.vec_size == 1:
+            # scalar register
+            return self._data[index][0]
+        else:
+            # vector register
+            return self._data[index]
+
+    def load(self):
+        raise NotImplementedError
+
+    @property
+    def data(self) -> str:
+        lines = []  # stdout buffer
+
+        row_format = "{:<13}" * self.vec_size
+        # Print index columns
+        lines.append(
+            row_format.format(
+                *[str(word_idx) for word_idx in range(self.vec_size)]),)
+
+        # Print separator line
+        lines.append("-" * (self.vec_size * 13))
+
+        # Print register values
+        lines += [
+            row_format.format(*[str(val)
+                                for val in data])
+            for data in self._data
+        ]
+        return "\n".join(lines) + "\n"
+
+    @data.setter
+    def data(self, file):
+        raise NotImplementedError
+
+
 class InstructionMemory(FileMap):
 
     def __init__(self, /, load_path: str):
