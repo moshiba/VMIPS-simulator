@@ -25,27 +25,27 @@ class BaseTestWithTempDir(unittest.TestCase):
 class TestRegisterFile(BaseTestWithTempDir):
 
     def test_dump_scalar_regfile(self):
-        golden_file = GoldenFiles / "SRF.txt"
-        result_file = self.temp_dir / "SRF.txt"
+        golden_output = GoldenFiles / "SRF.txt"
+        my_output = self.temp_dir / "SRF.txt"
 
-        regfile = main.RegisterFile(dump_path=result_file,
+        regfile = main.RegisterFile(dump_path=my_output,
                                     n_reg=8,
                                     vec_size=1,
                                     word_size=32)
         regfile.dump()
 
-        with golden_file.open() as golden, result_file.open() as result:
+        with golden_output.open() as golden, my_output.open() as result:
             self.assertEqual(golden.read(), result.read())
 
     def test_dump_vector_regfile(self):
-        golden_file = GoldenFiles / "VRF.txt"
-        result_file = self.temp_dir / "VRF.txt"
+        golden_output = GoldenFiles / "VRF.txt"
+        my_output = self.temp_dir / "VRF.txt"
 
-        regfile = main.RegisterFile(dump_path=result_file,
+        regfile = main.RegisterFile(dump_path=my_output,
                                     n_reg=8,
                                     vec_size=64,
                                     word_size=32)
         regfile.dump()
 
-        with golden_file.open() as golden, result_file.open() as result:
+        with golden_output.open() as golden, my_output.open() as result:
             self.assertEqual(golden.read(), result.read())
