@@ -82,3 +82,56 @@ class TestDataMemory(BaseTestWithTempDir):
 
         with golden_output.open("rb") as golden, my_output.open("rb") as result:
             self.assertEqual(golden.read(), result.read())
+
+
+class TestProcessorCore(BaseTestWithTempDir):
+
+    def test_program_counter(self):
+        """Test add/sub and add/sub-assignment on the program counter
+        """
+
+        # Generate an empty file to load into the instruction/data memory
+        # since we're not trying to do any operations here
+        with (empty_file := self.temp_dir / "empty.txt").open("w"):
+            pass
+
+        vcore = main.Core(
+            scalar_register_file=main.RegisterFile(dump_path=None,
+                                                   n_reg=8,
+                                                   vec_size=1,
+                                                   word_size=32),
+            vector_register_file=main.RegisterFile(dump_path=None,
+                                                   n_reg=8,
+                                                   vec_size=64,
+                                                   word_size=32),
+            instruction_mem=main.InstructionMemory(load_path=empty_file),
+            scalar_data_mem=main.DataMemory(
+                load_path=empty_file,
+                dump_path=None,
+                address_length=13
+                # 32 KB is 2^15 bytes = 2^13 K 32-bit words
+            ),
+            vector_data_mem=main.DataMemory(
+                load_path=empty_file,
+                dump_path=None,
+                address_length=17
+                # 512 KB is 2^19 bytes = 2^17 K 32-bit words
+            ))
+
+        # Test property initialization
+        self.assertEqual(0, vcore.PC)
+        self.assertEqual(0, vcore.program_counter)
+
+        # Test assignment
+        vcore.PC = 3
+        self.assertEqual(3, vcore.PC)
+        self.assertEqual(3, vcore.program_counter)
+
+        # Test addition assignment
+        vcore.PC += 5
+        self.assertEqual(8, vcore.PC)
+        self.assertEqual(8, vcore.program_counter)
+
+        # Test property read
+        vcore.program_counter += 7
+        self.assertEqual(15, vcore.PC)

@@ -172,6 +172,15 @@ class Core:
         self.instruction_mem.load()
         self.scalar_data_mem.load()
         self.vector_data_mem.load()
+        self.program_counter = 0  # mapped as writable property: PC
+
+    @property
+    def PC(self):
+        return self.program_counter
+
+    @PC.setter
+    def PC(self, value):
+        self.program_counter = int(value)
 
 
 if __name__ == "__main__":
