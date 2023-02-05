@@ -1,25 +1,13 @@
 """Test component functionality like operations and load/dump format
 """
 import pathlib
-import tempfile
 import unittest
 
-import main
+from main import Core, DataMemory, InstructionMemory, RegisterFile
+from tests.utils import BaseTestWithTempDir
 
 GoldenFiles = pathlib.Path("tests/NoOp")
 assert GoldenFiles.is_dir()
-
-
-class BaseTestWithTempDir(unittest.TestCase):
-    """Fixture that creates a temporary directory for tests to operate on
-    """
-
-    def setUp(self) -> None:
-        self._temp_dir = tempfile.TemporaryDirectory()
-        self.temp_dir = pathlib.Path(self._temp_dir.name)
-
-    def tearDown(self) -> None:
-        self._temp_dir.cleanup()
 
 
 class TestRegisterFile(BaseTestWithTempDir):
@@ -32,8 +20,8 @@ class TestRegisterFile(BaseTestWithTempDir):
         golden_output = GoldenFiles / "SRF.txt"
         my_output = self.temp_dir / "SRF.txt"
 
-        regfile = main.RegisterFile(dump_path=my_output,
-                                    **main.Core.common_params.scalar_regfile)
+        regfile = RegisterFile(dump_path=my_output,
+                               **Core.common_params.scalar_regfile)
         regfile.dump()
 
         with golden_output.open() as golden, my_output.open() as result:
@@ -45,8 +33,8 @@ class TestRegisterFile(BaseTestWithTempDir):
         golden_output = GoldenFiles / "VRF.txt"
         my_output = self.temp_dir / "VRF.txt"
 
-        regfile = main.RegisterFile(dump_path=my_output,
-                                    **main.Core.common_params.vector_regfile)
+        regfile = RegisterFile(dump_path=my_output,
+                               **Core.common_params.vector_regfile)
         regfile.dump()
 
         with golden_output.open() as golden, my_output.open() as result:
@@ -65,9 +53,9 @@ class TestDataMemory(BaseTestWithTempDir):
         my_output = self.temp_dir / "SDMEMOP.txt"
 
         # 32 KB is 2^15 bytes = 2^13 K 32-bit words
-        data_mem = main.DataMemory(load_path=test_input,
-                                   dump_path=my_output,
-                                   **main.Core.common_params.scalar_datamem)
+        data_mem = DataMemory(load_path=test_input,
+                              dump_path=my_output,
+                              **Core.common_params.scalar_datamem)
         data_mem.load()
         data_mem.dump()
 
@@ -82,9 +70,9 @@ class TestDataMemory(BaseTestWithTempDir):
         my_output = self.temp_dir / "VDMEMOP.txt"
 
         # 512 KB is 2^19 bytes = 2^17 K 32-bit words
-        data_mem = main.DataMemory(load_path=test_input,
-                                   dump_path=my_output,
-                                   **main.Core.common_params.vector_datamem)
+        data_mem = DataMemory(load_path=test_input,
+                              dump_path=my_output,
+                              **Core.common_params.vector_datamem)
         data_mem.load()
         data_mem.dump()
 
@@ -109,26 +97,25 @@ class TestProcessorCore(BaseTestWithTempDir):
             # since we're not trying to do any operations here
             pass
 
-        vcore = main.Core(
-            scalar_register_file=main.RegisterFile(
-                dump_path=None,
-                **main.Core.common_params.scalar_regfile,
-            ),
-            vector_register_file=main.RegisterFile(
-                dump_path=None,
-                **main.Core.common_params.vector_regfile,
-            ),
-            instruction_mem=main.InstructionMemory(load_path=empty_file),
-            scalar_data_mem=main.DataMemory(
-                load_path=empty_file,
-                dump_path=None,
-                **main.Core.common_params.scalar_datamem,
-            ),
-            vector_data_mem=main.DataMemory(
-                load_path=empty_file,
-                dump_path=None,
-                **main.Core.common_params.vector_datamem,
-            ))
+        vcore = Core(scalar_register_file=RegisterFile(
+            dump_path=None,
+            **Core.common_params.scalar_regfile,
+        ),
+                     vector_register_file=RegisterFile(
+                         dump_path=None,
+                         **Core.common_params.vector_regfile,
+                     ),
+                     instruction_mem=InstructionMemory(load_path=empty_file),
+                     scalar_data_mem=DataMemory(
+                         load_path=empty_file,
+                         dump_path=None,
+                         **Core.common_params.scalar_datamem,
+                     ),
+                     vector_data_mem=DataMemory(
+                         load_path=empty_file,
+                         dump_path=None,
+                         **Core.common_params.vector_datamem,
+                     ))
         return vcore
 
     def test_program_counter(self):
