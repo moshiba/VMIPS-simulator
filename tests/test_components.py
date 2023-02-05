@@ -49,3 +49,36 @@ class TestRegisterFile(BaseTestWithTempDir):
 
         with golden_output.open() as golden, my_output.open() as result:
             self.assertEqual(golden.read(), result.read())
+
+
+class TestDataMemory(BaseTestWithTempDir):
+
+    def test_dump_scalar_memory(self):
+        test_input = GoldenFiles / "SDMEM.txt"
+        golden_output = GoldenFiles / "SDMEMOP.txt"
+        my_output = self.temp_dir / "SDMEMOP.txt"
+
+        # 32 KB is 2^15 bytes = 2^13 K 32-bit words
+        data_mem = main.DataMemory(load_path=test_input,
+                                   dump_path=my_output,
+                                   address_length=13)
+        data_mem.load()
+        data_mem.dump()
+
+        with golden_output.open("rb") as golden, my_output.open("rb") as result:
+            self.assertEqual(golden.read(), result.read())
+
+    def test_dump_vector_memory(self):
+        test_input = GoldenFiles / "VDMEM.txt"
+        golden_output = GoldenFiles / "VDMEMOP.txt"
+        my_output = self.temp_dir / "VDMEMOP.txt"
+
+        # 512 KB is 2^19 bytes = 2^17 K 32-bit words
+        data_mem = main.DataMemory(load_path=test_input,
+                                   dump_path=my_output,
+                                   address_length=17)
+        data_mem.load()
+        data_mem.dump()
+
+        with golden_output.open("rb") as golden, my_output.open("rb") as result:
+            self.assertEqual(golden.read(), result.read())
