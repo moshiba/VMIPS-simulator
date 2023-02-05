@@ -1,11 +1,15 @@
-import pathlib
 import abc
-import io
 import copy
+import io
+import pathlib
+import typing
 
 
 class FileMap(abc.ABC):
-    """Base class for internal state persistence
+    """Base class for internal state persistence.
+
+    Provides load() and dump() like other Python built-in modules to predefined
+    or at-load/dump-time designated location.
     """
 
     def __init__(self, /, load_path: str, dump_path: str = None):
@@ -13,27 +17,35 @@ class FileMap(abc.ABC):
         self.dump_path = pathlib.Path(dump_path or load_path)
 
     def load(self, path: pathlib.Path = None):
+        """State importer"""
         path = pathlib.Path(path or self.load_path)
         with path.open(mode="r", encoding="ascii") as file:
-            self.data = file
+            self.internal_state = file
 
     def dump(self, path: pathlib.Path = None) -> int:
+        """State exporter"""
         path = pathlib.Path(path or self.dump_path)
         with path.open(mode="w", encoding="ascii") as file:
-            return file.write(self.data)
+            return file.write(self.internal_state)
 
     @property
     @abc.abstractmethod
-    def data(self) -> str:
+    def internal_state(self) -> str:
+        """Stringifier and formatter for the exporter
+        """
         raise NotImplementedError
 
-    @data.setter
+    @internal_state.setter
     @abc.abstractmethod
-    def data(self, file) -> None:
+    def internal_state(self, file) -> None:
+        """Stringifier and formatter for the importer
+        """
         raise NotImplementedError
 
 
 class RegisterFile(FileMap):
+    """Configurable register file
+    """
 
     def __init__(
             self,
@@ -53,6 +65,9 @@ class RegisterFile(FileMap):
         ]
 
     def __getitem__(self, index) -> int | list[int]:
+        """Syntax sugar to directly access the underlying registers without
+        meddling with internal variables.
+        """
         if self.vec_size == 1:
             # scalar register
             return self._data[index][0]
@@ -60,11 +75,14 @@ class RegisterFile(FileMap):
             # vector register
             return self._data[index]
 
+    @typing.final
     def load(self):
+        """Drop support for loading initial state.
+        """
         raise NotImplementedError
 
     @property
-    def data(self) -> str:
+    def internal_state(self) -> str:
         lines = []  # stdout buffer
 
         row_format = "{:<13}" * self.vec_size
@@ -84,12 +102,17 @@ class RegisterFile(FileMap):
         ]
         return "\n".join(lines) + "\n"
 
-    @data.setter
-    def data(self, file):
+    @typing.final
+    @internal_state.setter
+    def internal_state(self, file):
+        """Drop support for loading initial state.
+        """
         raise NotImplementedError
 
 
 class DataMemory(FileMap):
+    """Configurable data memory
+    """
 
     def __init__(
             self,
@@ -104,15 +127,18 @@ class DataMemory(FileMap):
         self._data = [0x0 for word in range(self.size_limit)]
 
     def __getitem__(self, index) -> int:
+        """Syntax sugar to directly access the underlying cells without meddling
+        with internal variables.
+        """
         return self._data[index]
 
     @property
-    def data(self) -> str:
+    def internal_state(self) -> str:
         lines = [str(word) for word in self._data]  # stdout buffer
         return "\n".join(lines) + "\n"
 
-    @data.setter
-    def data(self, file: io.TextIOWrapper):
+    @internal_state.setter
+    def internal_state(self, file: io.TextIOWrapper):
         mem_words = [int(line.strip()) for line in file.readlines()]
         n_words = len(mem_words)
         assert n_words < self.size_limit, "too much data"
@@ -122,6 +148,8 @@ class DataMemory(FileMap):
 
 
 class InstructionMemory(FileMap):
+    """Configurable instruction memory
+    """
 
     def __init__(self, /, load_path: str):
         super().__init__(load_path=load_path, dump_path="")
@@ -129,30 +157,40 @@ class InstructionMemory(FileMap):
         self.instructions = tuple()
 
     def __getitem__(self, index) -> str:
+        """Syntax sugar to directly access the underlying lines without meddling
+        with internal variables.
+        """
         if index > self.size_limit:
             raise IndexError(f"Invalid memory access at index {index}"
                              f" with memory size {self.size_limit}")
         return self.instructions[index]
 
+    @typing.final
     def dump(self):
+        """Drop support for dumping internal state.
+        There's no need for persistence and the current state is accessable
+        through the attribute 'instructions'.
+        """
         raise NotImplementedError
 
     @property
-    def data(self) -> str:
+    def internal_state(self) -> str:
         instructions = copy.copy(self.instructions)
         # Strip trailing empty instructions
         while not instructions[-1]:
             instructions.pop()
         return tuple(instructions)
 
-    @data.setter
-    def data(self, file: io.TextIOWrapper):
+    @internal_state.setter
+    def internal_state(self, file: io.TextIOWrapper):
         instructions = [instr.strip() for instr in file.readlines()]
         assert len(instructions) < self.size_limit, "too many instructions"
         self.instructions = instructions
 
 
 class Core:
+    """Configurable VMIPS core
+    """
 
     def __init__(
         self,
@@ -176,10 +214,12 @@ class Core:
 
     @property
     def PC(self):
+        """program counter value getter"""
         return self.program_counter
 
     @PC.setter
     def PC(self, value):
+        """program counter value setter"""
         self.program_counter = int(value)
 
 

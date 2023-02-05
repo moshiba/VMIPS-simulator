@@ -11,7 +11,7 @@ assert GoldenFiles.is_dir()
 
 
 class BaseTestWithTempDir(unittest.TestCase):
-    """Base class that creates a temporary directory for tests to operate on
+    """Fixture that creates a temporary directory for tests to operate on
     """
 
     def setUp(self) -> None:
@@ -23,8 +23,12 @@ class BaseTestWithTempDir(unittest.TestCase):
 
 
 class TestRegisterFile(BaseTestWithTempDir):
+    """Tests the configurable register file under scalar and vector settings
+    """
 
     def test_dump_scalar_regfile(self):
+        """Tests scalar register file dump format
+        """
         golden_output = GoldenFiles / "SRF.txt"
         my_output = self.temp_dir / "SRF.txt"
 
@@ -38,6 +42,8 @@ class TestRegisterFile(BaseTestWithTempDir):
             self.assertEqual(golden.read(), result.read())
 
     def test_dump_vector_regfile(self):
+        """Tests vector register file dump format
+        """
         golden_output = GoldenFiles / "VRF.txt"
         my_output = self.temp_dir / "VRF.txt"
 
@@ -52,8 +58,12 @@ class TestRegisterFile(BaseTestWithTempDir):
 
 
 class TestDataMemory(BaseTestWithTempDir):
+    """Tests the configurable data memory under scalar and vector settings
+    """
 
     def test_dump_scalar_memory(self):
+        """Tests scalar data memory dump format
+        """
         test_input = GoldenFiles / "SDMEM.txt"
         golden_output = GoldenFiles / "SDMEMOP.txt"
         my_output = self.temp_dir / "SDMEMOP.txt"
@@ -69,6 +79,8 @@ class TestDataMemory(BaseTestWithTempDir):
             self.assertEqual(golden.read(), result.read())
 
     def test_dump_vector_memory(self):
+        """Tests vector data memory dump format
+        """
         test_input = GoldenFiles / "VDMEM.txt"
         golden_output = GoldenFiles / "VDMEMOP.txt"
         my_output = self.temp_dir / "VDMEMOP.txt"
@@ -85,6 +97,8 @@ class TestDataMemory(BaseTestWithTempDir):
 
 
 class TestProcessorCore(BaseTestWithTempDir):
+    """Tests the configurable processor core under scalar and vector settings
+    """
 
     def test_program_counter(self):
         """Test add/sub and add/sub-assignment on the program counter
