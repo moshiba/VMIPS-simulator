@@ -222,6 +222,32 @@ class Core:
         """program counter value setter"""
         self.program_counter = int(value)
 
+    # Common parameters for components
+    class AttrDict(dict):
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.__dict__ = self
+
+    common_params = AttrDict(
+        scalar_regfile={
+            "n_reg": 8,
+            "vec_size": 1,
+            "word_size": 32,
+        },
+        vector_regfile={
+            "n_reg": 8,
+            "vec_size": 64,
+            "word_size": 32,
+        },
+        scalar_datamem={
+            "address_length": 13,  # 32 KB is 2^15 bytes = 2^13 K 32-bit words
+        },
+        vector_datamem={
+            "address_length": 17,  # 512 KB is 2^19 bytes = 2^17 K 32-bit words
+        },
+    )
+
 
 if __name__ == "__main__":
     import sys

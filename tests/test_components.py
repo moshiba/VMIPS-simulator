@@ -33,9 +33,7 @@ class TestRegisterFile(BaseTestWithTempDir):
         my_output = self.temp_dir / "SRF.txt"
 
         regfile = main.RegisterFile(dump_path=my_output,
-                                    n_reg=8,
-                                    vec_size=1,
-                                    word_size=32)
+                                    **main.Core.common_params.scalar_regfile)
         regfile.dump()
 
         with golden_output.open() as golden, my_output.open() as result:
@@ -48,9 +46,7 @@ class TestRegisterFile(BaseTestWithTempDir):
         my_output = self.temp_dir / "VRF.txt"
 
         regfile = main.RegisterFile(dump_path=my_output,
-                                    n_reg=8,
-                                    vec_size=64,
-                                    word_size=32)
+                                    **main.Core.common_params.vector_regfile)
         regfile.dump()
 
         with golden_output.open() as golden, my_output.open() as result:
@@ -71,7 +67,7 @@ class TestDataMemory(BaseTestWithTempDir):
         # 32 KB is 2^15 bytes = 2^13 K 32-bit words
         data_mem = main.DataMemory(load_path=test_input,
                                    dump_path=my_output,
-                                   address_length=13)
+                                   **main.Core.common_params.scalar_datamem)
         data_mem.load()
         data_mem.dump()
 
@@ -88,7 +84,7 @@ class TestDataMemory(BaseTestWithTempDir):
         # 512 KB is 2^19 bytes = 2^17 K 32-bit words
         data_mem = main.DataMemory(load_path=test_input,
                                    dump_path=my_output,
-                                   address_length=17)
+                                   **main.Core.common_params.vector_datamem)
         data_mem.load()
         data_mem.dump()
 
@@ -100,37 +96,45 @@ class TestProcessorCore(BaseTestWithTempDir):
     """Tests the configurable processor core under scalar and vector settings
     """
 
-    def test_program_counter(self):
-        """Test add/sub and add/sub-assignment on the program counter
-        """
+    @classmethod
+    def get_empty_core(cls, tempdir: pathlib.Path):
+        """Creates a processor with empty instruction and data memory.
 
-        # Generate an empty file to load into the instruction/data memory
-        # since we're not trying to do any operations here
-        with (empty_file := self.temp_dir / "empty.txt").open("w"):
+        Intends to be used in pure processor utils tests that don't involve
+        components like register files and memories.
+        """
+        assert tempdir.is_dir()
+        with (empty_file := tempdir / "empty.txt").open("w"):
+            # Generate an empty file to load into the instruction/data memory
+            # since we're not trying to do any operations here
             pass
 
         vcore = main.Core(
-            scalar_register_file=main.RegisterFile(dump_path=None,
-                                                   n_reg=8,
-                                                   vec_size=1,
-                                                   word_size=32),
-            vector_register_file=main.RegisterFile(dump_path=None,
-                                                   n_reg=8,
-                                                   vec_size=64,
-                                                   word_size=32),
+            scalar_register_file=main.RegisterFile(
+                dump_path=None,
+                **main.Core.common_params.scalar_regfile,
+            ),
+            vector_register_file=main.RegisterFile(
+                dump_path=None,
+                **main.Core.common_params.vector_regfile,
+            ),
             instruction_mem=main.InstructionMemory(load_path=empty_file),
             scalar_data_mem=main.DataMemory(
                 load_path=empty_file,
                 dump_path=None,
-                address_length=13
-                # 32 KB is 2^15 bytes = 2^13 K 32-bit words
+                **main.Core.common_params.scalar_datamem,
             ),
             vector_data_mem=main.DataMemory(
                 load_path=empty_file,
                 dump_path=None,
-                address_length=17
-                # 512 KB is 2^19 bytes = 2^17 K 32-bit words
+                **main.Core.common_params.vector_datamem,
             ))
+        return vcore
+
+    def test_program_counter(self):
+        """Test add/sub and add/sub-assignment on the program counter
+        """
+        vcore = self.get_empty_core(self.temp_dir)
 
         # Test property initialization
         self.assertEqual(0, vcore.PC)
