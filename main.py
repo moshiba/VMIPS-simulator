@@ -2,6 +2,7 @@ import abc
 import copy
 import io
 import pathlib
+import re
 import typing
 
 
@@ -212,6 +213,16 @@ class Core:
         self.vector_data_mem.load()
         self.program_counter = 0  # mapped as writable property: PC
 
+
+    @classmethod
+    def decode(cls, statement):
+        regex = r"^(?P<instruction>\w+)" \
+                r"(?:[ ]+(?P<operand1>\w+))?" \
+                r"(?:[ ]+(?P<operand2>\w+))?" \
+                r"(?:[ ]+(?P<operand3>[-\w]+))?"
+        tokens = re.match(regex, statement)
+        return tokens
+
     @property
     def PC(self):
         """program counter value getter"""
@@ -274,6 +285,16 @@ if __name__ == "__main__":
                                    address_length=17
                                    # 512 KB is 2^19 bytes = 2^17 K 32-bit words
                                   ))
+
+    for line in vcore.instruction_mem:
+        instr, op1, op2, op3 = vcore.decode(line).group(
+            "instruction",
+            "operand1",
+            "operand2",
+            "operand3",
+        )
+        print(instr, op1, op2, op3)
+
     if dump_all := False:
         # RegFile
         vcore.scalar_register_file.dump()
