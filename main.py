@@ -89,6 +89,38 @@ class RegisterFile(FileMap):
         raise NotImplementedError
 
 
+class DataMemory(FileMap):
+
+    def __init__(
+            self,
+            /,
+            load_path: str,
+            dump_path: str,
+            address_length: int,  # in bits
+    ):
+        super().__init__(load_path, dump_path)
+        self.size_limit = pow(2, address_length)
+        # TODO: do get/set min/max value check
+        self._data = [0x0 for word in range(self.size_limit)]
+
+    def __getitem__(self, index) -> int:
+        return self._data[index]
+
+    @property
+    def data(self) -> str:
+        lines = [str(word) for word in self._data]  # stdout buffer
+        return "\n".join(lines) + "\n"
+
+    @data.setter
+    def data(self, file: io.TextIOWrapper):
+        mem_words = [int(line.strip()) for line in file.readlines()]
+        n_words = len(mem_words)
+        assert n_words < self.size_limit, "too much data"
+        self._data = mem_words
+        # Pad the rest as zero
+        self._data.extend(0x0 for word in range(self.size_limit - n_words))
+
+
 class InstructionMemory(FileMap):
 
     def __init__(self, /, load_path: str):
