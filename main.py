@@ -213,14 +213,22 @@ class Core:
         self.vector_data_mem.load()
         self.program_counter = 0  # mapped as writable property: PC
 
+    _instruction_decoder_regex = re.compile(
+        # Type: Valid statement
+        r"(?:^(?P<instruction>\w+)"  #       instruction
+        r"(?:[ ]+(?P<operand1>\w+))?"  #     operand-1 (optional)
+        r"(?:[ ]+(?P<operand2>\w+))?"  #     operand-2 (optional)
+        r"(?:[ ]+(?P<operand3>[-\w]+))?"  #  operand-3 (optional)
+        r"[ ]*(?P<inline_comment>#.*)?$)"  # in-line comment (optional)
+        # Type: Comment line
+        r"|(?:^(?P<comment_line>[ ]*?#.*)$)"
+        # Type: Empty line
+        r"|(?P<empty_line>^(?<!.)$|(?:^[ ]+$)$)",
+        re.ASCII)
 
     @classmethod
     def decode(cls, statement):
-        regex = r"^(?P<instruction>\w+)" \
-                r"(?:[ ]+(?P<operand1>\w+))?" \
-                r"(?:[ ]+(?P<operand2>\w+))?" \
-                r"(?:[ ]+(?P<operand3>[-\w]+))?"
-        tokens = re.match(regex, statement)
+        tokens = cls._instruction_decoder_regex.match(statement)
         return tokens
 
     @property
