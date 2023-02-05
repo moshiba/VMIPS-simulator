@@ -186,6 +186,20 @@ class InstructionMemory(FileMap):
         instructions = [instr.strip() for instr in file.readlines()]
         assert len(instructions) < self.size_limit, "too many instructions"
         self.instructions = instructions
+        
+class Calculator():
+	
+	def __init__(RegisterFile RF):
+
+		self.RF = RF
+	
+	def dotProduct(self, inputA, inputB, output)
+		a = RF.__getitem__(inputA)
+		b = RF.__getitem__(inputB)
+		
+		result = sum(x * y for x, y in zip(a, b))
+		RF.__putitem__(result, output) //function not yet
+
 
 
 class Core:
