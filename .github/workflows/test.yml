@@ -1,0 +1,28 @@
+name: run unit tests
+run-name: Running unit tests
+
+on:
+  push:
+    paths:
+      - ".github/**"
+      - "**/*.py"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Test
+        working-directory: ./
+        run: |
+          python3 -m unittest discover tests "test_*.py" -v
