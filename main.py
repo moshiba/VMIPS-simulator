@@ -196,30 +196,47 @@ class DataMemory(FileMap):
         self.type = str(load_path)[-9] if len(str(load_path)) >= 9 else ""
         self.type = self.type if self.type in "SV" else "?"
 
-    def __getitem__(self, index) -> int:
+    def __getitem__(self, key) -> int:
         """Syntax sugar to directly access the underlying cells without meddling
         with internal variables.
         """
-        dprint(bgcolor("blue")(f"{self.type}mem read "),
-               f"0x{index:08X}",
-               end="",
-               debug_level=2)
-        assert 0 <= index, "address too small"
-        assert index < self.size_limit, "address too large"
-        dprint(f" = {self._data[index]}", debug_level=2)
-        return self._data[index]
+        # TODO: consider raising IndexError properly
+        # TODO: add tests for illegal address access
+        if isinstance(key, slice):  # Access a slice
+            lower_index = key.start or 0
+            upper_index = key.stop - 1
+        elif isinstance(key, int):  # Access a single element
+            lower_index = upper_index = key
+        else:
+            raise TypeError(f"bad key type: {type(key)}")
 
-    def __setitem__(self, index, value) -> int:
+        assert 0 <= lower_index, "address too small"
+        assert upper_index < self.size_limit, "address too large"
+
+        dprint(bgcolor("blue")(f"{self.type}mem read "),
+               f"{lower_index:010_d} = {self._data[key]}",
+               debug_level=2)
+        return self._data[key]
+
+    def __setitem__(self, key, value) -> int:
         """Syntax sugar to directly set the underlying cells without meddling
         with internal variables.
         """
+        if isinstance(key, slice):  # Access a slice
+            lower_index = key.start or 0
+            upper_index = key.stop - 1
+        elif isinstance(key, int):  # Access a single element
+            lower_index = upper_index = key
+        else:
+            raise TypeError(f"bad key type: {type(key)}")
+
+        assert 0 <= lower_index, "address too small"
+        assert upper_index < self.size_limit, "address too large"
+
         dprint(bgcolor("blue")(f"{self.type}mem write"),
-               f"0x{index:08X} = {self._data[index]}",
-               end="",
+               f"0x{lower_index:010_d} = {self._data[key]}",
                debug_level=2)
-        assert 0 <= index, "address too small"
-        assert index < self.size_limit, "address too large"
-        self._data[index] = value
+        self._data[key] = value
 
     @property
     def internal_state(self) -> str:
