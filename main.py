@@ -481,7 +481,7 @@ class Core:
 
             # Designate registers by index starting from 1
             # and memory cells starting from 0
-            return cell[int(reg_idx) - int(mem_type is "R")]
+            return cell[int(reg_idx) - int(mem_type == "R")]
         else:
             return self.__getattribute__(name)
 
