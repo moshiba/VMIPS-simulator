@@ -80,6 +80,21 @@ class RegisterFile(FileMap):
             assert index < self.vec_size, "index too large"
             return self._data[index]
 
+    def __setitem__(self, index, value):
+        """Syntax sugar to directly set the underlying registers without
+        meddling with internal variables.
+        """
+        assert 0 <= index, "index too small"
+
+        if self.vec_size == 1:
+            # scalar register
+            assert index < self.n_reg, "index too large"
+            self._data[index][0] = value
+        else:
+            # vector register
+            assert index < self.vec_size, "index too large"
+            self._data[index] = value
+
     @typing.final
     def load(self):
         """Drop support for loading initial state.
