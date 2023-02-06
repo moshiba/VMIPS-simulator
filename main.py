@@ -197,6 +197,17 @@ class DataMemory(FileMap):
         dprint(f" = {self._data[index]}")
         return self._data[index]
 
+    def __setitem__(self, index, value) -> int:
+        """Syntax sugar to directly set the underlying cells without meddling
+        with internal variables.
+        """
+        dprint(bgcolor("blue")(f"{self.type}mem write"),
+               f"0x{index:08X} = {self._data[index]}",
+               end="")
+        assert 0 <= index, "address too small"
+        assert index < self.size_limit, "address too large"
+        self._data[index] = value
+
     @property
     def internal_state(self) -> str:
         lines = [str(word) for word in self._data]  # stdout buffer

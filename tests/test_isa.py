@@ -113,4 +113,22 @@ class TestProcessorCore(BaseTestWithTempDir):
         self.assertEqual(vcore.SR3, 5)
         self.assertEqual(vcore.SR4, 7)
         self.assertEqual(vcore.SR5, 11)
+
+        # Test store
+        # source before operation is previous destination-after-operation
+        # destination before operation
+        self.assertEqual(vcore.SM4, 0)
+        self.assertEqual(vcore.SM5, 0)
+        self.assertEqual(vcore.SM6, 0)
+        self.assertEqual(vcore.SM7, 0)
+        vcore.step_instr()
+        vcore.step_instr()
+        vcore.step_instr()
+        vcore.step_instr()
+        # destination after operation
+        self.assertEqual(vcore.SM4, 3)
+        self.assertEqual(vcore.SM5, 5)
+        self.assertEqual(vcore.SM6, 7)
+        self.assertEqual(vcore.SM7, 11)
+
         gather_stats(vcore)
