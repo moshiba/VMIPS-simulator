@@ -73,16 +73,12 @@ class TestProcessorCore(BaseTestWithTempDir):
         test_prefix = "accumulate"
         vcore = self.get_core(self.temp_dir, test_prefix)
 
-        instr = ""
-        while instr != "HALT":
-            current_line = vcore.instruction_mem[vcore.PC]
-            instr = vcore.decode(current_line)["instruction"]
-            if instr is not None:
-                instructions_used.add(instr)
-
-            # Do work
-            vcore.step()
-
-        print(vcore.scalar_register_file._data)
-
+        vcore.run()
         self.assertEqual(vcore.SR5, 55)
+
+        # Gather instruction test coverage
+        instructions_used.update(
+            set(instr for instr in [
+                vcore.decode(line)["instruction"]
+                for line in vcore.instruction_mem
+            ] if instr is not None))
