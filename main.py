@@ -1,4 +1,5 @@
 import abc
+import argparse
 import copy
 import io
 import operator
@@ -428,44 +429,47 @@ class Core:
 
 
 if __name__ == "__main__":
-    import sys
+    # Parse arguments for input file location
+    parser = argparse.ArgumentParser(
+        description='Vector Core Performance Model')
+    parser.add_argument(
+        '--iodir',
+        default="",
+        type=str,
+        help=
+        'Path to the folder containing the input files - instructions and data.'
+    )
+    args = parser.parse_args()
 
-    assert len(sys.argv) == 2
-    assert (assembly_program := pathlib.Path(sys.argv[1])).is_file()
-    data_dir = pathlib.PurePath("isa_test_data")
+    io_dir = pathlib.Path(args.iodir).absolute()
+    print("IO Directory:", io_dir)
+
     vcore = Core(
-        scalar_register_file=RegisterFile(dump_path=data_dir / "SRF.txt",
+        scalar_register_file=RegisterFile(dump_path=io_dir / "SRF.txt",
                                           n_reg=8,
                                           word_size=32),
-        vector_register_file=RegisterFile(dump_path=data_dir / "VRF.txt",
+        vector_register_file=RegisterFile(dump_path=io_dir / "VRF.txt",
                                           n_reg=8,
                                           vec_size=64,
                                           word_size=32),
-        instruction_mem=InstructionMemory(load_path=data_dir / "Code.asm"),
-        scalar_data_mem=DataMemory(load_path=data_dir / "SDMEM.txt",
-                                   dump_path=data_dir / "SDMEMOP.txt",
+        instruction_mem=InstructionMemory(load_path=io_dir / "Code.asm"),
+        scalar_data_mem=DataMemory(load_path=io_dir / "SDMEM.txt",
+                                   dump_path=io_dir / "SDMEMOP.txt",
                                    address_length=13
                                    # 32 KB is 2^15 bytes = 2^13 K 32-bit words
                                   ),
-        vector_data_mem=DataMemory(load_path=data_dir / "VDMEM.txt",
-                                   dump_path=data_dir / "VDMEMOP.txt",
+        vector_data_mem=DataMemory(load_path=io_dir / "VDMEM.txt",
+                                   dump_path=io_dir / "VDMEMOP.txt",
                                    address_length=17
                                    # 512 KB is 2^19 bytes = 2^17 K 32-bit words
                                   ))
 
-    for line in vcore.instruction_mem:
-        instr, op1, op2, op3 = vcore.decode(line).group(
-            "instruction",
-            "operand1",
-            "operand2",
-            "operand3",
-        )
-        print(instr, op1, op2, op3)
+    vcore.run()
 
-    if dump_all := False:
-        # RegFile
-        vcore.scalar_register_file.dump()
-        vcore.vector_register_file.dump()
-        # Memory
-        vcore.scalar_data_mem.dump()
-        vcore.vector_data_mem.dump()
+    # Dump all internal state
+    # RegFile
+    vcore.scalar_register_file.dump()
+    vcore.vector_register_file.dump()
+    # Memory
+    vcore.scalar_data_mem.dump()
+    vcore.vector_data_mem.dump()
