@@ -27,7 +27,10 @@ def color(color_str: str, background=False):
     reset = csi + "0m"
     color_map = ("black", "red", "green", "yellow", "blue", "magenta", "cyan",
                  "white")
-    color_code = color_map.index(color_str) + 30 + background * 10
+    bright_tone = color_str.startswith("bright_")
+    color_str = color_str.removeprefix("bright_")
+    color_code = color_map.index(
+        color_str) + 30 + background * 10 + bright_tone * 60
     color_seq = csi + str(color_code) + "m"
 
     def formatter(string: str):
