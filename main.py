@@ -439,11 +439,25 @@ class Core:
         self.program_counter = int(value)
 
     def step(self):
-        """Execute one instruction
+        """Execute one line of code
         """
         current_line = self.instruction_mem[self.PC]
         self.alu.do(self.decode(current_line))
         self.PC += 1
+
+    def step_instr(self):
+        """Executes one instruction
+        Step over empty or comment lines
+        """
+        # Skip non-statement lines
+        next_line = self.instruction_mem[self.PC]
+        next_instruction = self.decode(next_line)["instruction"]
+        while next_instruction is None:
+            self.step()
+            next_line = self.instruction_mem[self.PC]
+            next_instruction = self.decode(next_line)["instruction"]
+
+        self.step()  # Execute the next line, which will not by empty or comment
 
     def run(self):
         while self.freeze is not True:
