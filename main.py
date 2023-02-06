@@ -353,22 +353,18 @@ class ALU:
         # scalar, vector, strided, scatter/gather
         operand_type = functionality["vec_op_type"]
 
+        operand2 = vrf[self.reg_index(instruction["operand2"])]
         if operand_type == "V":
-            operand2 = vrf[self.reg_index(instruction["operand2"])]
             operand3 = vrf[self.reg_index(instruction["operand3"])]
-
-            vrf[self.reg_index(instruction["operand1"])] = list(
-                map(getattr(operator, operation_code), operand2, operand3))
         elif operand_type == "S":
-            operand2 = vrf[self.reg_index(instruction["operand2"])]
-            operand3 = srf[self.reg_index(instruction["operand3"])]
-
-            vrf[self.reg_index(instruction["operand1"])] = list(
-                map(getattr(operator, operation_code), operand2,
-                    itertools.cycle(operand3)))
+            operand3 = itertools.cycle(srf[self.reg_index(
+                instruction["operand3"])])
         else:
             raise RuntimeError("Unknown vector arithmetic instruction:",
                                instruction.groupdict())
+
+        vrf[self.reg_index(instruction["operand1"])] = list(
+            map(getattr(operator, operation_code), operand2, operand3))
 
     def vec_mask_reg(self, functionality, instruction):
         raise NotImplementedError
