@@ -1,12 +1,39 @@
 import abc
 import argparse
 import copy
+import functools
 import io
 import operator
+import os
 import pathlib
 import re
 import typing
 
+DEBUG = os.environ.get("DEBUG", False)  # debug flag
+
+
+def dprint(*args, **kwargs):
+    if DEBUG:
+        print(*args, **kwargs)
+
+
+def color(color_str: str, background=False):
+    """Provide colorful output with ANSI escape codes
+    """
+    csi = "\033["  # control sequence introducer
+    reset = csi + "0m"
+    color_map = ("black", "red", "green", "yellow", "blue", "magenta", "cyan",
+                 "white")
+    color_code = color_map.index(color_str) + 30 + background * 10
+    color_seq = csi + str(color_code) + "m"
+
+    def formatter(string: str):
+        return color_seq + string + reset
+
+    return formatter
+
+
+bgcolor = functools.partial(color, background=True)
 
 class FileMap(abc.ABC):
     """Base class for internal state persistence.
@@ -66,11 +93,15 @@ class RegisterFile(FileMap):
         self._data = [
             [0x0 for scalar in range(vec_size)] for reg in range(n_reg)
         ]
+        # get type assuming standard naming scheme: S/V+RF for scalar/vector
+        self.type = str(dump_path)[-7] if len(str(dump_path)) >= 7 else ""
+        self.type = self.type if self.type in "SV" else ""
 
     def __getitem__(self, index) -> int | list[int]:
         """Syntax sugar to directly access the underlying registers without
         meddling with internal variables.
         """
+        dprint(color("blue")(f"{self.type}reg read "), f"R{index+1}")
         assert 0 <= index, "index too small"
 
         if self.vec_size == 1:
@@ -86,6 +117,7 @@ class RegisterFile(FileMap):
         """Syntax sugar to directly set the underlying registers without
         meddling with internal variables.
         """
+        dprint(color("red")(f"{self.type}reg write"), f"R{index+1}")
         assert 0 <= index, "index too small"
 
         if self.vec_size == 1:
@@ -147,11 +179,15 @@ class DataMemory(FileMap):
         self.size_limit = pow(2, address_length)
         # TODO: do get/set min/max value check
         self._data = [0x0 for word in range(self.size_limit)]
+        # get type assuming standard naming scheme: S/V+DMEM for scalar/vector
+        self.type = str(load_path)[-9] if len(str(load_path)) >= 9 else ""
+        self.type = self.type if self.type in "SV" else "?"
 
     def __getitem__(self, index) -> int:
         """Syntax sugar to directly access the underlying cells without meddling
         with internal variables.
         """
+        dprint(bgcolor("blue")(f"{self.type}mem read "), f"0x{index:08X}")
         assert 0 <= index, "address too small"
         assert index < self.size_limit, "address too large"
         return self._data[index]
@@ -184,6 +220,9 @@ class InstructionMemory(FileMap):
         """Syntax sugar to directly access the underlying lines without meddling
         with internal variables.
         """
+        dprint(
+            bgcolor("white")(color("green")("instr read")) +
+            bgcolor("white")(color("black")(f" {index+1} ")))
         if index > self.size_limit:
             raise IndexError(f"Invalid memory access at index {index}"
                              f" with memory size {self.size_limit}")
