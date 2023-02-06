@@ -3,6 +3,7 @@ import argparse
 import copy
 import functools
 import io
+import itertools
 import operator
 import os
 import pathlib
@@ -307,7 +308,7 @@ class ALU:
     # function_table
     _match_func_type_regex = re.compile(
         r"^"
-        r"(?P<vector_op>(ADD|SUB|MUL|DIV)V(?P<vec_op_type>[VS]))"
+        r"(?:(?P<vector_op>ADD|SUB|MUL|DIV)V(?P<vec_op_type>[VS]))"
         r"|(?P<vec_mask_reg>(?:S(?P<mask_condition>EQ|NE|GT|LT|GE|LE)V(?P<mask_type>[VS]))|(?P<clear_mask>CVM)|(?P<count_mask>POP))"
         r"|(?P<vec_len_reg>M[TF]CL)"
         r"|(?P<mem_op>[LS])(?P<mem_type>VWS|VI|V|S)"
@@ -344,7 +345,27 @@ class ALU:
         return int(register_token[2:]) - 1
 
     def vector_op(self, functionality, instruction):
-        raise NotImplementedError
+        # TODO: implement vector length/mask later
+        srf = self.core.scalar_register_file
+        vrf = self.core.vector_register_file
+
+        operation_code = functionality["vector_op"].lower()
+        # scalar, vector, strided, scatter/gather
+        operand_type = functionality["vec_op_type"]
+
+        if operand_type == "V":
+            operand2 = vrf[self.reg_index(instruction["operand2"])]
+            operand3 = vrf[self.reg_index(instruction["operand3"])]
+
+            vrf[self.reg_index(instruction["operand1"])] = list(
+                map(getattr(operator, operation_code), operand2, operand3))
+        elif operand_type == "S":
+            operand2 = vrf[self.reg_index(instruction["operand2"])]
+            operand3 = srf[self.reg_index(instruction["operand3"])]
+            raise NotImplementedError
+        else:
+            raise RuntimeError("Unknown vector arithmetic instruction:",
+                               instruction.groupdict())
 
     def vec_mask_reg(self, functionality, instruction):
         raise NotImplementedError
