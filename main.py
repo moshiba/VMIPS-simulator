@@ -100,6 +100,7 @@ class RegisterFile(FileMap):
         self._data = [
             [0x0 for scalar in range(vec_size)] for reg in range(n_reg)
         ]
+        self.vector_mask_register = [1] * vec_size
         # get type assuming standard naming scheme: S/V+RF for scalar/vector
         self.type = str(dump_path)[-7] if len(str(dump_path)) >= 7 else ""
         self.type = self.type if self.type in "SV" else ""
@@ -367,7 +368,33 @@ class ALU:
             map(getattr(operator, operation_code), operand2, operand3))
 
     def vec_mask_reg(self, functionality, instruction):
-        raise NotImplementedError
+        # TODO: test masked vector arithmetics
+        srf = self.core.scalar_register_file
+        vrf = self.core.vector_register_file
+
+        if functionality["clear_mask"]:  # CVM
+            vrf.vector_mask_register = [1] * vrf.vec_size
+
+        elif functionality["count_mask"]:  # POP
+            srf[self.reg_index(
+                instruction["operand1"])] = vrf.vector_mask_register.count(1)
+
+        elif (operation_code :=
+              functionality["mask_condition"]) and (mask_type :=
+                                                    functionality["mask_type"]):
+            operand1 = vrf[self.reg_index(instruction["operand1"])]
+            if mask_type == "V":
+                operand2 = vrf[self.reg_index(instruction["operand2"])]
+            elif mask_type == "S":
+                operand2 = itertools.cycle(srf[self.reg_index(
+                    instruction["operand2"])])
+
+            vrf.vector_mask_register = list(
+                map(getattr(operator, operation_code), operand1, operand2))
+
+        else:
+            raise RuntimeError("Unknown vector mask register instruction:",
+                               instruction.groupdict())
 
     def vec_len_reg(self, functionality, instruction):
         raise NotImplementedError
