@@ -475,6 +475,8 @@ class ALU:
         operand1 = srf[self.reg_index(instruction["operand1"])]
         operand2 = srf[self.reg_index(instruction["operand2"])]
         immediate = int(instruction["operand3"])
+        assert immediate <= pow(2, 20), "immediate too large"
+        assert -pow(2, 20) <= immediate, "immediate too small"
 
         operation = operator.methodcaller(condition, operand1, operand2)
         compare_result = operation(operator)
