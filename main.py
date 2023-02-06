@@ -69,11 +69,15 @@ class RegisterFile(FileMap):
         """Syntax sugar to directly access the underlying registers without
         meddling with internal variables.
         """
+        assert 0 <= index, "index too small"
+
         if self.vec_size == 1:
             # scalar register
+            assert index < self.n_reg, "index too large"
             return self._data[index][0]
         else:
             # vector register
+            assert index < self.vec_size, "index too large"
             return self._data[index]
 
     @typing.final
@@ -131,6 +135,8 @@ class DataMemory(FileMap):
         """Syntax sugar to directly access the underlying cells without meddling
         with internal variables.
         """
+        assert 0 <= index, "address too small"
+        assert index < self.size_limit, "address too large"
         return self._data[index]
 
     @property
