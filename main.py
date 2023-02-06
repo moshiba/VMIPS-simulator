@@ -347,6 +347,8 @@ class Core:
         self.alu = ALU(self)
         self.freeze = False
 
+    _attr_shorthand_regex = re.compile(r"^(?P<type>[SV])R(?P<index>\d+)$",
+                                       re.ASCII)
     _instruction_decoder_regex = re.compile(
         # Type: Valid statement
         r"(?:^(?P<instruction>\w+)"  #       instruction
@@ -359,6 +361,18 @@ class Core:
         # Type: Empty line
         r"|(?P<empty_line>^(?<!.)$|(?:^[ ]+$)$)",
         re.ASCII)
+
+    def __getattr__(self, name: str):
+        """Shorthands for accessing register files
+        """
+        if match_result := self._attr_shorthand_regex.match(name):
+            reg_file_type, reg_idx = match_result.groups()
+            reg_file = self.__getattribute__(
+                f"{dict(s='scalar', v='vector')[reg_file_type.lower()]}_register_file"
+            )
+            return reg_file[int(reg_idx) - 1]
+        else:
+            return self.__getattribute__(name)
 
     @classmethod
     def decode(cls, statement):
