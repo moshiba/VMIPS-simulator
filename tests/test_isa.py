@@ -34,6 +34,15 @@ def tearDownModule():
     print("-" * 80)
 
 
+def gather_stats(core: Core):
+    """Gather instruction test coverage
+    """
+    instructions_used.update(
+        set(instr for instr in
+            [core.decode(line)["instruction"] for line in core.instruction_mem]
+            if instr is not None))
+
+
 class TestProcessorCore(BaseTestWithTempDir):
     """Tests the configurable processor core
     """
@@ -76,9 +85,4 @@ class TestProcessorCore(BaseTestWithTempDir):
         vcore.run()
         self.assertEqual(vcore.SR5, 55)
 
-        # Gather instruction test coverage
-        instructions_used.update(
-            set(instr for instr in [
-                vcore.decode(line)["instruction"]
-                for line in vcore.instruction_mem
-            ] if instr is not None))
+        gather_stats(vcore)
