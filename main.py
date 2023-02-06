@@ -363,9 +363,9 @@ class ALU:
         # scalar, vector, strided, scatter/gather
         mem_type = functionality["mem_type"]
 
-        immediate = int(instruction["operand3"])
-
         if mem_type == "S":  # scalar
+            immediate = int(instruction["operand3"])
+
             if action == "L":  # load
                 address_value = srf[self.reg_index(instruction["operand2"])]
                 # reg = mem[reg + imm]
@@ -377,10 +377,17 @@ class ALU:
                 # mem[reg + imm] = reg
                 smem[address_value + immediate] = value
         elif mem_type == "V":  # vector
+            # TODO: implement vector length/mask later
             if action == "L":  # load
-                VM(op1)[SR(op2)]
+                address_value = srf[self.reg_index(instruction["operand2"])]
+                mem_value = vmem[address_value:address_value + vrf.vec_size]
+                # reg = mem[reg]
+                vrf[self.reg_index(instruction["operand1"])] = mem_value
             else:  # store
-                pass
+                address_value = srf[self.reg_index(instruction["operand2"])]
+                value = vrf[self.reg_index(instruction["operand1"])]
+                # mem[reg] = reg
+                vmem[address_value:address_value + vrf.vec_size] = value
         elif mem_type == "VWS":  # strided
             raise NotImplementedError
         elif mem_type == "VI":  # scatter/gather
