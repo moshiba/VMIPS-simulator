@@ -290,7 +290,7 @@ class ALU:
         r"(?P<vector_op>(ADD|SUB|MUL|DIV)V(?P<vec_op_type>[VS]))"
         r"|(?P<vec_mask_reg>(?:S(?P<mask_condition>EQ|NE|GT|LT|GE|LE)V(?P<mask_type>[VS]))|(?P<clear_mask>CVM)|(?P<count_mask>POP))"
         r"|(?P<vec_len_reg>M[TF]CL)"
-        r"|(?P<mem_op>[LS])(?P<mem_type>V|VWS|VI|S)"
+        r"|(?P<mem_op>[LS])(?P<mem_type>VWS|VI|V|S)"
         r"|(?P<scalar_op>ADD|SUB|AND|OR|XOR)"
         r"|(?P<control>B(?P<branch_condition>EQ|NE|GT|LT|GE|LE))"
         r"|(?P<stop>HALT)"
