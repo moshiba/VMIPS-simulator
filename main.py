@@ -334,6 +334,10 @@ class ALU:
 
     def mem_op(self, functionality, instruction):
         srf = self.core.scalar_register_file
+        vrf = self.core.vector_register_file
+        smem = self.core.scalar_data_mem
+        vmem = self.core.vector_data_mem
+
         # load or save
         action = functionality["mem_op"]
         # scalar, vector, strided, scatter/gather
@@ -343,16 +347,20 @@ class ALU:
 
         if mem_type == "S":  # scalar
             if action == "L":  # load
+                address_value = srf[self.reg_index(instruction["operand2"])]
+                # reg = mem[reg + imm]
                 srf[self.reg_index(
-                    instruction["operand1"])] = self.core.scalar_data_mem[
-                        srf[self.reg_index(instruction["operand2"])] +
-                        immediate]
+                    instruction["operand1"])] = smem[address_value + immediate]
             else:  # store
-                self.core.scalar_data_mem[
-                    srf[self.reg_index(instruction["operand2"])] +
-                    immediate] = srf[self.reg_index(instruction["operand1"])]
+                address_value = srf[self.reg_index(instruction["operand2"])]
+                value = srf[self.reg_index(instruction["operand1"])]
+                # mem[reg + imm] = reg
+                smem[address_value + immediate] = value
         elif mem_type == "V":  # vector
-            raise NotImplementedError
+            if action == "L":  # load
+                VM(op1)[SR(op2)]
+            else:  # store
+                pass
         elif mem_type == "VWS":  # strided
             raise NotImplementedError
         elif mem_type == "VI":  # scatter/gather
