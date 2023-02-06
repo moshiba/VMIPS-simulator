@@ -159,3 +159,19 @@ class TestProcessorCore(BaseTestWithTempDir):
         self.assertEqual(vcore.vector_data_mem[64:64 * 2], list(range(0, 64)))
 
         gather_stats(vcore)
+
+    def test_vector_add_sub(self):
+        """Test vector add/subtract
+        """
+        test_prefix = "vector_add_sub"
+        vcore = self.get_core(self.temp_dir, test_prefix)
+
+        # destination before operation
+        self.assertEqual(vcore.vector_data_mem[64 * 2:64 * 3], [0] * 64)
+
+        vcore.run()
+
+        # destination after operation
+        self.assertEqual(vcore.vector_data_mem[64 * 2:64 * 3], [1] * 64)
+
+        gather_stats(vcore)
