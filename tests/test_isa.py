@@ -55,23 +55,23 @@ class TestProcessorCore(BaseTestWithTempDir):
         assert tempdir.is_dir()
 
         vcore = Core(scalar_register_file=RegisterFile(
-            dump_path=None,
+            dump_path=tempdir / f"{file_prefix}_SRF.txt",
             **Core.common_params.scalar_regfile,
         ),
                      vector_register_file=RegisterFile(
-                         dump_path=None,
+                         dump_path=tempdir / f"{file_prefix}_VRF.txt",
                          **Core.common_params.vector_regfile,
                      ),
                      instruction_mem=InstructionMemory(load_path=golden_dir /
                                                        f"{file_prefix}.asm"),
                      scalar_data_mem=DataMemory(
                          load_path=golden_dir / f"{file_prefix}_SDMEM.txt",
-                         dump_path=None,
+                         dump_path=tempdir / f"{file_prefix}_SDMEMOP.txt",
                          **Core.common_params.scalar_datamem,
                      ),
                      vector_data_mem=DataMemory(
                          load_path=golden_dir / f"{file_prefix}_VDMEM.txt",
-                         dump_path=None,
+                         dump_path=tempdir / f"{file_prefix}_VDMEMOP.txt",
                          **Core.common_params.vector_datamem,
                      ))
         return vcore
