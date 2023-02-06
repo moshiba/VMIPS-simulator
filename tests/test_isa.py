@@ -133,3 +133,29 @@ class TestProcessorCore(BaseTestWithTempDir):
         self.assertEqual(vcore.SM7, 11)
 
         gather_stats(vcore)
+
+    def test_vector_load_store(self):
+        """Test vector load store instructions
+        """
+        test_prefix = "vector_load_store"
+        vcore = self.get_core(self.temp_dir, test_prefix)
+
+        # Test load
+        # source before operation
+        self.assertEqual(vcore.vector_data_mem[0:64], list(range(0, 64)))
+        # destination before operation
+        self.assertEqual(vcore.VR1, [0] * 64)
+        vcore.step_instr()
+        # destination after operation
+        self.assertEqual(vcore.VR1, list(range(0, 64)))
+
+        # Test store
+        # source before operation is previous destination-after-operation
+        # destination before operation
+        self.assertEqual(vcore.vector_data_mem[64:64 * 2], [0] * 64)
+        vcore.step_instr()
+        vcore.step_instr()
+        # destination after operation
+        self.assertEqual(vcore.vector_data_mem[64:64 * 2], list(range(0, 64)))
+
+        gather_stats(vcore)
