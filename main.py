@@ -101,23 +101,25 @@ class RegisterFile(FileMap):
         """Syntax sugar to directly access the underlying registers without
         meddling with internal variables.
         """
-        dprint(color("blue")(f"{self.type}reg read "), f"R{index+1}")
+        dprint(color("blue")(f"{self.type}reg read "), f"R{index+1}", end="")
         assert 0 <= index, "index too small"
 
         if self.vec_size == 1:
             # scalar register
             assert index < self.n_reg, "index too large"
+            dprint(f" = {self._data[index][0]}")
             return self._data[index][0]
         else:
             # vector register
             assert index < self.vec_size, "index too large"
+            dprint(f" = {self._data[index]}")
             return self._data[index]
 
     def __setitem__(self, index, value):
         """Syntax sugar to directly set the underlying registers without
         meddling with internal variables.
         """
-        dprint(color("red")(f"{self.type}reg write"), f"R{index+1}")
+        dprint(color("red")(f"{self.type}reg write"), f"R{index+1} = {value}")
         assert 0 <= index, "index too small"
 
         if self.vec_size == 1:
@@ -187,9 +189,12 @@ class DataMemory(FileMap):
         """Syntax sugar to directly access the underlying cells without meddling
         with internal variables.
         """
-        dprint(bgcolor("blue")(f"{self.type}mem read "), f"0x{index:08X}")
+        dprint(bgcolor("blue")(f"{self.type}mem read "),
+               f"0x{index:08X}",
+               end="")
         assert 0 <= index, "address too small"
         assert index < self.size_limit, "address too large"
+        dprint(f" = {self._data[index]}")
         return self._data[index]
 
     @property
