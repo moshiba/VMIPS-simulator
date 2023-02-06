@@ -485,11 +485,11 @@ class Core:
         Step over empty or comment lines
         """
         # Skip non-statement lines
-        next_line = self.instruction_mem[self.PC]
+        next_line = self.instruction_mem.instructions[self.PC]
         next_instruction = self.decode(next_line)["instruction"]
         while next_instruction is None:
             self.step()
-            next_line = self.instruction_mem[self.PC]
+            next_line = self.instruction_mem.instructions[self.PC]
             next_instruction = self.decode(next_line)["instruction"]
 
         self.step()  # Execute the next line, which will not by empty or comment
