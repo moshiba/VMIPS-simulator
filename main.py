@@ -266,15 +266,18 @@ class InstructionMemory(FileMap):
         """Syntax sugar to directly access the underlying lines without meddling
         with internal variables.
         """
+        dprint(bgcolor("bright_black")(f"{index+1}" + color("bright_green")
+                                       (self.instructions[index])),
+               debug_level=1)
         dprint(bgcolor("white")(color("green")("instr read")) +
                bgcolor("white")(color("black")(f" {index+1} ")),
+               list(i for i in Core.decode(self.instructions[index]).groups()
+                    if i is not None),
                debug_level=2)
+
         if index > self.size_limit:
             raise IndexError(f"Invalid memory access at index {index}"
                              f" with memory size {self.size_limit}")
-        dprint(bgcolor("bright_black")(f"{index}" + color("bright_green")
-                                       (self.instructions[index])),
-               debug_level=1)
         return self.instructions[index]
 
     @typing.final
