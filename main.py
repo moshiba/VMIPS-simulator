@@ -12,8 +12,11 @@ import typing
 DEBUG = os.environ.get("DEBUG", False)  # debug flag
 
 
-def dprint(*args, **kwargs):
-    if DEBUG:
+def dprint(*args, debug_level: int = 1, **kwargs):
+    """Level filtered debug logger
+    """
+    log_level = int(DEBUG)
+    if log_level >= debug_level:
         print(*args, **kwargs)
 
 
@@ -101,25 +104,30 @@ class RegisterFile(FileMap):
         """Syntax sugar to directly access the underlying registers without
         meddling with internal variables.
         """
-        dprint(color("blue")(f"{self.type}reg read "), f"R{index+1}", end="")
+        dprint(color("blue")(f"{self.type}reg read "),
+               f"R{index+1}",
+               end="",
+               debug_level=2)
         assert 0 <= index, "index too small"
 
         if self.vec_size == 1:
             # scalar register
             assert index < self.n_reg, "index too large"
-            dprint(f" = {self._data[index][0]}")
+            dprint(f" = {self._data[index][0]}", debug_level=2)
             return self._data[index][0]
         else:
             # vector register
             assert index < self.vec_size, "index too large"
-            dprint(f" = {self._data[index]}")
+            dprint(f" = {self._data[index]}", debug_level=2)
             return self._data[index]
 
     def __setitem__(self, index, value):
         """Syntax sugar to directly set the underlying registers without
         meddling with internal variables.
         """
-        dprint(color("red")(f"{self.type}reg write"), f"R{index+1} = {value}")
+        dprint(color("red")(f"{self.type}reg write"),
+               f"R{index+1} = {value}",
+               debug_level=2)
         assert 0 <= index, "index too small"
 
         if self.vec_size == 1:
@@ -191,10 +199,11 @@ class DataMemory(FileMap):
         """
         dprint(bgcolor("blue")(f"{self.type}mem read "),
                f"0x{index:08X}",
-               end="")
+               end="",
+               debug_level=2)
         assert 0 <= index, "address too small"
         assert index < self.size_limit, "address too large"
-        dprint(f" = {self._data[index]}")
+        dprint(f" = {self._data[index]}", debug_level=2)
         return self._data[index]
 
     def __setitem__(self, index, value) -> int:
@@ -203,7 +212,8 @@ class DataMemory(FileMap):
         """
         dprint(bgcolor("blue")(f"{self.type}mem write"),
                f"0x{index:08X} = {self._data[index]}",
-               end="")
+               end="",
+               debug_level=2)
         assert 0 <= index, "address too small"
         assert index < self.size_limit, "address too large"
         self._data[index] = value
@@ -236,9 +246,9 @@ class InstructionMemory(FileMap):
         """Syntax sugar to directly access the underlying lines without meddling
         with internal variables.
         """
-        dprint(
-            bgcolor("white")(color("green")("instr read")) +
-            bgcolor("white")(color("black")(f" {index+1} ")))
+        dprint(bgcolor("white")(color("green")("instr read")) +
+               bgcolor("white")(color("black")(f" {index+1} ")),
+               debug_level=2)
         if index > self.size_limit:
             raise IndexError(f"Invalid memory access at index {index}"
                              f" with memory size {self.size_limit}")
@@ -512,9 +522,9 @@ if __name__ == "__main__":
         help=
         'Path to the folder containing the input files - instructions and data.'
     )
-    args = parser.parse_args()
+    parsed_args = parser.parse_args()
 
-    io_dir = pathlib.Path(args.iodir).absolute()
+    io_dir = pathlib.Path(parsed_args.iodir).absolute()
     print("IO Directory:", io_dir)
 
     vcore = Core(
