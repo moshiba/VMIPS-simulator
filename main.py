@@ -255,6 +255,9 @@ class InstructionMemory(FileMap):
         if index > self.size_limit:
             raise IndexError(f"Invalid memory access at index {index}"
                              f" with memory size {self.size_limit}")
+        dprint(bgcolor("bright_black")(f"{index}" + color("bright_green")
+                                       (self.instructions[index])),
+               debug_level=1)
         return self.instructions[index]
 
     @typing.final
