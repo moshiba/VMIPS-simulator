@@ -38,9 +38,10 @@ def gather_stats(core: Core):
     """Gather instruction test coverage
     """
     instructions_used.update(
-        set(instr for instr in
-            [core.decode(line)["instruction"] for line in core.instruction_mem]
-            if instr is not None))
+        set(instr for instr in [
+            core.decode(line)["instruction"]
+            for line in core.instruction_mem.instructions
+        ] if instr is not None))
 
 
 class TestProcessorCore(BaseTestWithTempDir):
