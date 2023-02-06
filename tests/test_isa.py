@@ -86,3 +86,31 @@ class TestProcessorCore(BaseTestWithTempDir):
         self.assertEqual(vcore.SR5, 55)
 
         gather_stats(vcore)
+
+    def test_scalar_load_store(self):
+        """Test scalar load store instructions
+        """
+        test_prefix = "scalar_load_store"
+        vcore = self.get_core(self.temp_dir, test_prefix)
+
+        # Test load
+        # source before operation
+        self.assertEqual(vcore.SM0, 3)
+        self.assertEqual(vcore.SM1, 5)
+        self.assertEqual(vcore.SM2, 7)
+        self.assertEqual(vcore.SM3, 11)
+        # destination before operation
+        self.assertEqual(vcore.SR2, 0)
+        self.assertEqual(vcore.SR3, 0)
+        self.assertEqual(vcore.SR4, 0)
+        self.assertEqual(vcore.SR5, 0)
+        vcore.step_instr()
+        vcore.step_instr()
+        vcore.step_instr()
+        vcore.step_instr()
+        # destination after operation
+        self.assertEqual(vcore.SR2, 3)
+        self.assertEqual(vcore.SR3, 5)
+        self.assertEqual(vcore.SR4, 7)
+        self.assertEqual(vcore.SR5, 11)
+        gather_stats(vcore)
