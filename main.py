@@ -101,6 +101,7 @@ class RegisterFile(FileMap):
             [0x0 for scalar in range(vec_size)] for reg in range(n_reg)
         ]
         self.vector_mask_register = [1] * vec_size
+        self.vector_length_register = vec_size
         # get type assuming standard naming scheme: S/V+RF for scalar/vector
         self.type = str(dump_path)[-7] if len(str(dump_path)) >= 7 else ""
         self.type = self.type if self.type in "SV" else ""
@@ -311,7 +312,7 @@ class ALU:
         r"^"
         r"(?:(?P<vector_op>ADD|SUB|MUL|DIV)V(?P<vec_op_type>[VS]))"
         r"|(?P<vec_mask_reg>(?:S(?P<mask_condition>EQ|NE|GT|LT|GE|LE)V(?P<mask_type>[VS]))|(?P<clear_mask>CVM)|(?P<count_mask>POP))"
-        r"|(?P<vec_len_reg>M[TF]CL)"
+        r"|(?P<vec_len_reg>M(?P<vlr_mode>[TF])CL)"
         r"|(?P<mem_op>[LS])(?P<mem_type>VWS|VI|V|S)"
         r"|(?P<scalar_op>ADD|SUB|AND|OR|XOR)"
         r"|(?P<control>B(?P<branch_condition>EQ|NE|GT|LT|GE|LE))"
@@ -397,7 +398,19 @@ class ALU:
                                instruction.groupdict())
 
     def vec_len_reg(self, functionality, instruction):
-        raise NotImplementedError
+        srf = self.core.scalar_register_file
+        vrf = self.core.vector_register_file
+
+        mode = functionality["vlr_mode"]
+        if mode == "T":
+            vrf.vector_length_register = srf[self.reg_index(
+                instruction["operand1"])]
+        elif mode == "F":
+            srf[self.reg_index(
+                instruction["operand1"])] = vrf.vector_length_register
+        else:
+            raise RuntimeError("Unknown vector length register instruction:",
+                               instruction.groupdict())
 
     def mem_op(self, functionality, instruction):
         srf = self.core.scalar_register_file
