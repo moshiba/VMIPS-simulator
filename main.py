@@ -1,6 +1,7 @@
 import abc
 import copy
 import io
+import operator
 import pathlib
 import re
 import typing
@@ -210,6 +211,116 @@ class InstructionMemory(FileMap):
         self.instructions = instructions
 
 
+class ALU:
+    # function_table
+    _match_func_type_regex = re.compile(
+        r"^"
+        r"(?P<vector_op>(ADD|SUB|MUL|DIV)V(?P<vec_op_type>[VS]))"
+        r"|(?P<vec_mask_reg>(?:S(?P<mask_condition>EQ|NE|GT|LT|GE|LE)V(?P<mask_type>[VS]))|(?P<clear_mask>CVM)|(?P<count_mask>POP))"
+        r"|(?P<vec_len_reg>M[TF]CL)"
+        r"|(?P<mem_op>[LS])(?P<mem_type>V|VWS|VI|S)"
+        r"|(?P<scalar_op>ADD|SUB|AND|OR|XOR)"
+        r"|(?P<control>B(?P<branch_condition>EQ|NE|GT|LT|GE|LE))"
+        r"|(?P<stop>HALT)"
+        r"$", re.ASCII)
+
+    def __init__(self, core):
+        self.core = core
+
+    def do(self, parsed_instruction: re.Match):
+        instruction = parsed_instruction["instruction"]
+        if instruction is None:
+            return  # Skip no-op statements such as comments
+
+        functionality = self._match_func_type_regex.match(instruction)
+        # As all these instruction-name-format groups are disjoint, only one
+        # type would match. So if there are some match then they must all belong
+        # to the same instruction.
+        # And since instruction operation type is the first capture group for
+        # all instruction formats, finding the first non-empty match would give
+        # the functionality group of the instruction
+        func_group = tuple({
+            k: v for k, v in functionality.groupdict().items() if v is not None
+        })[0]
+        getattr(self, func_group)(functionality, parsed_instruction)
+
+    @classmethod
+    def reg_index(cls, register_token):
+        """Helper method to extract register index from assembly
+        for example: SR2->1
+        """
+        return int(register_token[2:]) - 1
+
+    def vector_op(self, functionality, instruction):
+        raise NotImplementedError
+
+    def vec_mask_reg(self, functionality, instruction):
+        raise NotImplementedError
+
+    def vec_len_reg(self, functionality, instruction):
+        raise NotImplementedError
+
+    def mem_op(self, functionality, instruction):
+        srf = self.core.scalar_register_file
+        # load or save
+        action = functionality["mem_op"]
+        # scalar, vector, strided, scatter/gather
+        mem_type = functionality["mem_type"]
+
+        immediate = int(instruction["operand3"])
+
+        if mem_type == "S":  # scalar
+            if action == "L":  # load
+                srf[self.reg_index(
+                    instruction["operand1"])] = self.core.scalar_data_mem[
+                        srf[self.reg_index(instruction["operand2"])] +
+                        immediate]
+            else:  # store
+                self.core.scalar_data_mem[
+                    srf[self.reg_index(instruction["operand2"])] +
+                    immediate] = srf[self.reg_index(instruction["operand1"])]
+        elif mem_type == "V":  # vector
+            raise NotImplementedError
+        elif mem_type == "VWS":  # strided
+            raise NotImplementedError
+        elif mem_type == "VI":  # scatter/gather
+            raise NotImplementedError
+        else:
+            raise RuntimeError("Unknown memory operation instruction:",
+                               instruction.groupdict())
+
+    def scalar_op(self, functionality, instruction):
+        operation_code = functionality["scalar_op"].lower()
+
+        srf = self.core.scalar_register_file
+        operand2 = srf[self.reg_index(instruction["operand2"])]
+        operand3 = srf[self.reg_index(instruction["operand3"])]
+
+        operation = operator.methodcaller(operation_code, operand2, operand3)
+        srf[self.reg_index(instruction["operand1"])] = operation(operator)
+
+    def control(self, functionality, instruction):
+        condition = functionality["branch_condition"].lower()
+
+        srf = self.core.scalar_register_file
+        operand1 = srf[self.reg_index(instruction["operand1"])]
+        operand2 = srf[self.reg_index(instruction["operand2"])]
+        immediate = int(instruction["operand3"])
+
+        operation = operator.methodcaller(condition, operand1, operand2)
+        compare_result = operation(operator)
+
+        if compare_result is True:
+            # Branch taken
+            self.core.PC += immediate
+        else:
+            # Branch not taken
+            pass
+
+    def stop(self, functionality, instruction):
+        self.core.freeze = True
+
+
 class Core:
     """Configurable VMIPS core
     """
@@ -233,6 +344,8 @@ class Core:
         self.scalar_data_mem.load()
         self.vector_data_mem.load()
         self.program_counter = 0  # mapped as writable property: PC
+        self.alu = ALU(self)
+        self.freeze = False
 
     _instruction_decoder_regex = re.compile(
         # Type: Valid statement
@@ -261,6 +374,17 @@ class Core:
     def PC(self, value):
         """program counter value setter"""
         self.program_counter = int(value)
+
+    def step(self):
+        """Execute one instruction
+        """
+        current_line = self.instruction_mem[self.PC]
+        self.alu.do(self.decode(current_line))
+        self.PC += 1
+
+    def run(self):
+        while self.freeze is not True:
+            self.step()
 
     # Common parameters for components
     class AttrDict(dict):
