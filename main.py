@@ -387,8 +387,8 @@ class Core:
         self.alu = ALU(self)
         self.freeze = False
 
-    _attr_shorthand_regex = re.compile(r"^(?P<type>[SV])R(?P<index>\d+)$",
-                                       re.ASCII)
+    _attr_shorthand_regex = re.compile(
+        r"^(?P<value_type>[SV])(?P<mem_type>[RM])(?P<index>\d+)$", re.ASCII)
     _instruction_decoder_regex = re.compile(
         # Type: Valid statement
         r"(?:^(?P<instruction>\w+)"  #       instruction
@@ -403,14 +403,18 @@ class Core:
         re.ASCII)
 
     def __getattr__(self, name: str):
-        """Shorthands for accessing register files
+        """Shorthands for accessing register files and memories
         """
         if match_result := self._attr_shorthand_regex.match(name):
-            reg_file_type, reg_idx = match_result.groups()
-            reg_file = self.__getattribute__(
-                f"{dict(s='scalar', v='vector')[reg_file_type.lower()]}_register_file"
-            )
-            return reg_file[int(reg_idx) - 1]
+            value_type, mem_type, reg_idx = match_result.groups()
+            cell = self.__getattribute__(
+                f"{dict(S='scalar', V='vector')[value_type]}"
+                "_"
+                f"{dict(R='register_file',M='data_mem')[mem_type]}")
+
+            # Designate registers by index starting from 1
+            # and memory cells starting from 0
+            return cell[int(reg_idx) - int(mem_type is "R")]
         else:
             return self.__getattribute__(name)
 
