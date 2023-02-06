@@ -436,20 +436,22 @@ class ALU:
                 value = srf[self.reg_index(instruction["operand1"])]
                 # mem[reg + imm] = reg
                 smem[address_value + immediate] = value
-        elif mem_type == "V":  # vector
+        elif (strided := mem_type == "VWS") or mem_type == "V":  # vector
             # TODO: implement vector length/mask later
+            stride = srf[self.reg_index(
+                instruction["operand3"])] if strided else 1
             if action == "L":  # load
                 address_value = srf[self.reg_index(instruction["operand2"])]
-                mem_value = vmem[address_value:address_value + vrf.vec_size]
+                mem_value = vmem[address_value:address_value +
+                                 vrf.vec_size:stride]
                 # reg = mem[reg]
                 vrf[self.reg_index(instruction["operand1"])] = mem_value
             else:  # store
                 address_value = srf[self.reg_index(instruction["operand2"])]
                 value = vrf[self.reg_index(instruction["operand1"])]
                 # mem[reg] = reg
-                vmem[address_value:address_value + vrf.vec_size] = value
-        elif mem_type == "VWS":  # strided
-            raise NotImplementedError
+                vmem[address_value:address_value + vrf.vec_size:stride] = value
+
         elif mem_type == "VI":  # scatter/gather
             raise NotImplementedError
         else:
