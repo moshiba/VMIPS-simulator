@@ -314,7 +314,7 @@ class ALU:
         r"|(?P<vec_mask_reg>(?:S(?P<mask_condition>EQ|NE|GT|LT|GE|LE)V(?P<mask_type>[VS]))|(?P<clear_mask>CVM)|(?P<count_mask>POP))"
         r"|(?P<vec_len_reg>M(?P<vlr_mode>[TF])CL)"
         r"|(?P<mem_op>[LS])(?P<mem_type>VWS|VI|V|S)"
-        r"|(?P<scalar_op>ADD|SUB|AND|OR|XOR)"
+        r"|(?P<scalar_op>ADD|SUB|AND|OR|XOR|SLL|SRL|SRA)"
         r"|(?P<control>B(?P<branch_condition>EQ|NE|GT|LT|GE|LE))"
         r"|(?P<stop>HALT)"
         r"$", re.ASCII)
@@ -461,11 +461,20 @@ class ALU:
 
     def scalar_op(self, functionality, instruction):
         operation_code = functionality["scalar_op"].lower()
+        # slightly alter operation name to get the bitwise version
+        if operation_code in ("and", "or", "xor"):
+            operation_code += "_"
+        elif operation_code in ("sll", "srl"):
+            operation_code = f"{operation_code[1]}shift"
 
         srf = self.core.scalar_register_file
         operand2 = srf[self.reg_index(instruction["operand2"])]
         operand3 = srf[self.reg_index(instruction["operand3"])]
 
+        if operation_code == "sra":
+            srf[self.reg_index(
+                instruction["operand1"])] = (operand2 & 0xFFFF_FFFF) >> operand3
+            return
         operation = operator.methodcaller(operation_code, operand2, operand3)
         srf[self.reg_index(instruction["operand1"])] = operation(operator)
 
