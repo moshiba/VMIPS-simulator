@@ -362,7 +362,10 @@ class ALU:
         elif operand_type == "S":
             operand2 = vrf[self.reg_index(instruction["operand2"])]
             operand3 = srf[self.reg_index(instruction["operand3"])]
-            raise NotImplementedError
+
+            vrf[self.reg_index(instruction["operand1"])] = list(
+                map(getattr(operator, operation_code), operand2,
+                    itertools.cycle(operand3)))
         else:
             raise RuntimeError("Unknown vector arithmetic instruction:",
                                instruction.groupdict())
