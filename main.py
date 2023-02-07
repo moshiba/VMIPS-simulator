@@ -364,7 +364,8 @@ class ALU:
                                instruction.groupdict())
 
         vrf[self.reg_index(instruction["operand1"])] = list(
-            map(getattr(operator, operation_code), operand2, operand3))
+            i & 0xFFFF_FFFF
+            for i in map(getattr(operator, operation_code), operand2, operand3))
 
     def vec_mask_reg(self, functionality, instruction):
         # TODO: test masked vector arithmetics
@@ -464,19 +465,23 @@ class ALU:
         # slightly alter operation name to get the bitwise version
         if operation_code in ("and", "or", "xor"):
             operation_code += "_"
-        elif operation_code in ("sll", "srl"):
+        elif operation_code in ("sll", "sra"):
             operation_code = f"{operation_code[1]}shift"
 
         srf = self.core.scalar_register_file
         operand2 = srf[self.reg_index(instruction["operand2"])]
         operand3 = srf[self.reg_index(instruction["operand3"])]
 
-        if operation_code == "sra":
+        if operation_code == "srl":
+            # Python stores integers in large containers
+            # logical right shift needs special steps
+            operand2 &= 0xFFFF_FFFF  # strips (possible) 1-s higher than 32-bits
             srf[self.reg_index(
                 instruction["operand1"])] = (operand2 & 0xFFFF_FFFF) >> operand3
             return
         operation = operator.methodcaller(operation_code, operand2, operand3)
-        srf[self.reg_index(instruction["operand1"])] = operation(operator)
+        srf[self.reg_index(
+            instruction["operand1"])] = operation(operator) & 0xFFFF_FFFF
 
     def control(self, functionality, instruction):
         condition = functionality["branch_condition"].lower()
