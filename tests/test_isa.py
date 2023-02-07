@@ -175,3 +175,25 @@ class TestProcessorCore(BaseTestWithTempDir):
         self.assertEqual(vcore.vector_data_mem[64 * 2:64 * 3], [1] * 64)
 
         gather_stats(vcore)
+
+    def test_halt(self):
+        """Test if program stops before EOF after a HALT
+        """
+        test_prefix = "halt"
+        vcore = self.get_core(self.temp_dir, test_prefix)
+
+        # Test load
+        # destination before operation
+        self.assertEqual(vcore.SR2, 0)
+
+        vcore.run()  # should stop automatically
+
+        # force even some more steps
+        vcore.step()
+        vcore.step()
+        vcore.step()
+
+        # destination after operation: LS->SR2 SHOULDN'T BE EXECUTED
+        self.assertEqual(vcore.SR2, 0)
+
+        gather_stats(vcore)
