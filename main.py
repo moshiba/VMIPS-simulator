@@ -582,9 +582,13 @@ class Core:
     def step(self):
         """Execute one line of code
         """
-        current_line = self.instruction_mem[self.PC]
-        self.alu.do(self.decode(current_line))
-        self.PC += 1
+        if self.freeze is not True:
+            current_line = self.instruction_mem[self.PC]
+            self.alu.do(self.decode(current_line))
+            if self.PC + 1 < len(self.instruction_mem.instructions):
+                self.PC += 1
+            else:
+                self.freeze = True
 
     def step_instr(self):
         """Executes one instruction
