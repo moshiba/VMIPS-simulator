@@ -75,6 +75,105 @@ def get_core(in_dir: pathlib.Path, out_dir: pathlib.Path, file_prefix: str):
     return vcore
 
 
+class TestSingleInstruction(BaseTestWithTempDir):
+    """Test each instructions, one at a time
+    """
+    _parse_test_name_regex = re.compile(r"^test_\d+_(?P<instr>\w+)$", re.ASCII)
+
+    @classmethod
+    def current_instruction(cls):
+        return cls._parse_test_name_regex.match(
+            inspect.currentframe().f_back.f_code.co_name)["instr"]
+
+    @classmethod
+    def generate(cls, tempdir: pathlib.Path, instruction: str, code: str,
+                 scalar_mem: list[int], vector_mem: list[int]) -> str:
+        """Generates code with template
+        """
+        assert instruction in code, f"instruction {instruction} is not in the code: '{instruction}'"
+        file_prefix = f"single_instr_test_{instruction}"
+
+        code_file = (tempdir / f"{file_prefix}.asm").open(mode="w")
+        code_file.write(code + "\n")
+        code_file.flush()
+
+        scalar_mem_file = (tempdir / f"{file_prefix}_SDMEM.txt").open(mode="w")
+        scalar_mem_file.writelines([str(i) for i in scalar_mem])
+        scalar_mem_file.flush()
+
+        vector_mem_file = (tempdir / f"{file_prefix}_VDMEM.txt").open(mode="w")
+        vector_mem_file.writelines([str(i) for i in vector_mem])
+        vector_mem_file.flush()
+
+        return code_file, scalar_mem_file, vector_mem_file
+
+    def test_1_ADDVV(self):
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="ADDVV VR3 VR1 VR2",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+
+        vcore.vector_register_file[0] = list(range(64))
+        vcore.vector_register_file[1] = list(reversed(range(64)))
+        vcore.run()
+        self.assertEqual([63] * 64, vcore.VR3)
+
+    def test_1_SUBVV(self):
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="SUBVV VR3 VR1 VR2",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+
+        vcore.vector_register_file[0] = list(range(0, 64))
+        vcore.vector_register_file[1] = list(range(1, 65))
+        vcore.run()
+        self.assertEqual([-1] * 64, vcore.VR3)
+
+    def test_2_ADDVS(self):
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="ADDVS VR3 VR1 SR2",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+
+        vcore.vector_register_file[0] = list(range(3, 67))
+        vcore.scalar_register_file[1] = -2
+        vcore.run()
+        self.assertEqual(list(range(1, 65)), vcore.VR3)
+
+    def test_2_SUBVS(self):
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="SUBVS VR3 VR1 SR2",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+
+        vcore.vector_register_file[0] = list(range(0, 64))
+        vcore.scalar_register_file[1] = 63
+        vcore.run()
+        self.assertEqual(list(range(-63, 1)), vcore.VR3)
 class TestIntegratedSmallProgram(BaseTestWithTempDir):
     """Run small programs that uses multiple instructions
     """
