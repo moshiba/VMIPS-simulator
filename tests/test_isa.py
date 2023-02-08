@@ -242,6 +242,125 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.scalar_register_file[1] = 2
         vcore.run()
         self.assertEqual([i // 2 for i in range(64)], vcore.VR3)
+
+    def test_5_SEQVV(self):
+        pass  # @todo Test SEQVV
+
+    def test_5_SNEVV(self):
+        pass  # @todo Test SNEVV
+
+    def test_5_SGTVV(self):
+        pass  # @todo Test SGTVV
+
+    def test_5_SLTVV(self):
+        pass  # @todo Test SLTVV
+
+    def test_5_SGEVV(self):
+        pass  # @todo Test SGEVV
+
+    def test_5_SLEVV(self):
+        pass  # @todo Test SEQVV
+
+    def test_6_SEQVS(self):
+        pass  # @todo Test SEQVS
+
+    def test_6_SNEVS(self):
+        pass  # @todo Test SNEVS
+
+    def test_6_SGTVS(self):
+        pass  # @todo Test SGTVS
+
+    def test_6_SLTVS(self):
+        pass  # @todo Test SLTVS
+
+    def test_6_SGEVS(self):
+        pass  # @todo Test SGEVS
+
+    def test_6_SLEVS(self):
+        pass  # @todo Test SLEVS
+
+    def test_7_CVM(self):
+        pass  # @todo Test CVM
+
+    def test_8_POP(self):
+        pass  # @todo Test POP
+
+    def test_9_MTCL(self):
+        pass  # @todo Test MTCL
+
+    def test_10_MFCL(self):
+        pass  # @todo Test MFCL
+
+    def test_11_LV(self):
+        pass  # @todo Test LV
+
+    def test_12_SV(self):
+        pass  # @todo Test SV
+
+    def test_13_LVWS(self):
+        pass  # @todo Test LVWS
+
+    def test_14_SVWS(self):
+        pass  # @todo Test SVWS
+
+    def test_15_LVI(self):
+        pass  # @todo Test LVI
+
+    def test_16_SVI(self):
+        pass  # @todo Test SVI
+
+    def test_17_LS(self):
+        pass  # @todo Test LS
+
+    def test_18_SS(self):
+        pass  # @todo Test SS
+
+    def test_19_ADD(self):
+        pass  # @todo Test ADD
+
+    def test_19_SUB(self):
+        pass  # @todo Test SUB
+
+    def test_20_AND(self):
+        pass  # @todo Test AND
+
+    def test_20_OR(self):
+        pass  # @todo Test OR
+
+    def test_20_XOR(self):
+        pass  # @todo Test XOR
+
+    def test_21_SLL(self):
+        pass  # @todo Test SLL
+
+    def test_21_SRL(self):
+        pass  # @todo Test SRL
+
+    def test_22_SRA(self):
+        pass  # @todo Test SRA
+
+    def test_23_BEQ(self):
+        pass  # @todo Test BEQ
+
+    def test_23_BNE(self):
+        pass  # @todo Test BNE
+
+    def test_23_BGT(self):
+        pass  # @todo Test BGT
+
+    def test_23_BLT(self):
+        pass  # @todo Test BLT
+
+    def test_23_BGE(self):
+        pass  # @todo Test BGE
+
+    def test_23_BLE(self):
+        pass  # @todo Test BLE
+
+    def test_24_HALT(self):
+        pass  # @todo Test HALT
+
+
 class TestIntegratedSmallProgram(BaseTestWithTempDir):
     """Run small programs that uses multiple instructions
     """
