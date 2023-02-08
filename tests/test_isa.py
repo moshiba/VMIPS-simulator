@@ -348,22 +348,223 @@ class TestSingleInstruction(BaseTestWithTempDir):
         pass  # @todo Test SRA
 
     def test_23_BEQ(self):
-        pass  # @todo Test BEQ
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("BEQ SR1 SR2 1"
+                  "\n"
+                  "ABRACADABRA"
+                  "\n"
+                  "HALT"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        # case 1: SR1 > SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 3
+        vcore.scalar_register_file[1] = 1
+        with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
+            vcore.run()
+        gather_stats(vcore)
+        # case 2: SR1 = SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 2
+        vcore.scalar_register_file[1] = 2
+        vcore.run()  # asserts that no exception is raised
+        gather_stats(vcore)
+        # case 3: SR1 < SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 1
+        vcore.scalar_register_file[1] = 3
+        with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
+            vcore.run()
+        gather_stats(vcore)
 
     def test_23_BNE(self):
-        pass  # @todo Test BNE
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("BNE SR1 SR2 1"
+                  "\n"
+                  "ABRACADABRA"
+                  "\n"
+                  "HALT"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        # case 1: SR1 > SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 3
+        vcore.scalar_register_file[1] = 1
+        vcore.run()  # asserts that no exception is raised
+        gather_stats(vcore)
+        # case 2: SR1 = SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 2
+        vcore.scalar_register_file[1] = 2
+        with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
+            vcore.run()
+        gather_stats(vcore)
+        # case 3: SR1 < SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 1
+        vcore.scalar_register_file[1] = 3
+        vcore.run()  # asserts that no exception is raised
+        gather_stats(vcore)
 
     def test_23_BGT(self):
-        pass  # @todo Test BGT
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("BGT SR1 SR2 1"
+                  "\n"
+                  "ABRACADABRA"
+                  "\n"
+                  "HALT"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        # case 1: SR1 > SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 3
+        vcore.scalar_register_file[1] = 1
+        vcore.run()  # asserts that no exception is raised
+        gather_stats(vcore)
+        # case 2: SR1 = SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 2
+        vcore.scalar_register_file[1] = 2
+        with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
+            vcore.run()
+        gather_stats(vcore)
+        # case 3: SR1 < SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 1
+        vcore.scalar_register_file[1] = 3
+        with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
+            vcore.run()
+        gather_stats(vcore)
 
     def test_23_BLT(self):
-        pass  # @todo Test BLT
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("BLT SR1 SR2 1"
+                  "\n"
+                  "ABRACADABRA"
+                  "\n"
+                  "HALT"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        # case 1: SR1 > SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 3
+        vcore.scalar_register_file[1] = 1
+        with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
+            vcore.run()
+        gather_stats(vcore)
+        # case 2: SR1 = SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 2
+        vcore.scalar_register_file[1] = 2
+        with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
+            vcore.run()
+        gather_stats(vcore)
+        # case 3: SR1 < SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 1
+        vcore.scalar_register_file[1] = 3
+        vcore.run()  # asserts that no exception is raised
+        gather_stats(vcore)
 
     def test_23_BGE(self):
-        pass  # @todo Test BGE
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("BGE SR1 SR2 1"
+                  "\n"
+                  "ABRACADABRA"
+                  "\n"
+                  "HALT"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        # case 1: SR1 > SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 3
+        vcore.scalar_register_file[1] = 1
+        vcore.run()  # asserts that no exception is raised
+        gather_stats(vcore)
+        # case 2: SR1 = SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 2
+        vcore.scalar_register_file[1] = 2
+        vcore.run()  # asserts that no exception is raised
+        gather_stats(vcore)
+        # case 3: SR1 < SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 1
+        vcore.scalar_register_file[1] = 3
+        with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
+            vcore.run()
+        gather_stats(vcore)
 
     def test_23_BLE(self):
-        pass  # @todo Test BLE
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("BLE SR1 SR2 1"
+                  "\n"
+                  "ABRACADABRA"
+                  "\n"
+                  "HALT"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        # case 1: SR1 > SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 3
+        vcore.scalar_register_file[1] = 1
+        with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
+            vcore.run()
+        gather_stats(vcore)
+        # case 2: SR1 = SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 2
+        vcore.scalar_register_file[1] = 2
+        vcore.run()  # asserts that no exception is raised
+        gather_stats(vcore)
+        # case 3: SR1 < SR2
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[0] = 1
+        vcore.scalar_register_file[1] = 3
+        vcore.run()  # asserts that no exception is raised
+        gather_stats(vcore)
 
     def test_24_HALT(self):
         instruction = self.current_instruction()
