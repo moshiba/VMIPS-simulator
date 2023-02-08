@@ -106,7 +106,7 @@ class RegisterFile(FileMap):
         self.type = str(dump_path)[-7] if len(str(dump_path)) >= 7 else ""
         self.type = self.type if self.type in "SV" else ""
 
-    def __getitem__(self, index) -> int | list[int]:
+    def __getitem__(self, index) -> typing.Union[int, list[int]]:
         """Syntax sugar to directly access the underlying registers without
         meddling with internal variables.
         """
