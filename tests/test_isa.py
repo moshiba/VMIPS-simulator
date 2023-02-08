@@ -134,6 +134,19 @@ class TestProcessorCore(BaseTestWithTempDir):
 
         gather_stats(vcore)
 
+    def test_scalar_add_sub(self):
+        """Test scalar add/subtract
+        """
+        test_prefix = "add_sub"
+        vcore = self.get_core(self.temp_dir, test_prefix)
+
+        vcore.run()
+
+        self.assertEqual(5, vcore.SR7)
+        self.assertEqual(-5&0xFFFF_FFFF, vcore.SR8)
+
+        gather_stats(vcore)
+
     def test_vector_load_store(self):
         """Test vector load store instructions
         """
