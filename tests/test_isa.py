@@ -1,6 +1,8 @@
 """Test instruction functionalities
 """
+import inspect
 import pathlib
+import re
 import unittest
 
 from main import Core, DataMemory, InstructionMemory, RegisterFile
@@ -44,44 +46,44 @@ def gather_stats(core: Core):
         ] if instr is not None))
 
 
-class TestProcessorCore(BaseTestWithTempDir):
-    """Tests the configurable processor core
+def get_core(in_dir: pathlib.Path, out_dir: pathlib.Path, file_prefix: str):
+    """Creates a processor
+    with instruction and data memory loaded from designated locations
     """
+    assert in_dir.is_dir() and out_dir.is_dir()
 
-    @classmethod
-    def get_core(cls, tempdir: pathlib.Path, file_prefix: str):
-        """Creates a processor
-        with instruction and data memory loaded from designated locations
-        """
-        assert tempdir.is_dir()
+    vcore = Core(scalar_register_file=RegisterFile(
+        dump_path=out_dir / f"{file_prefix}_SRF.txt",
+        **Core.common_params.scalar_regfile,
+    ),
+                 vector_register_file=RegisterFile(
+                     dump_path=out_dir / f"{file_prefix}_VRF.txt",
+                     **Core.common_params.vector_regfile,
+                 ),
+                 instruction_mem=InstructionMemory(load_path=in_dir /
+                                                   f"{file_prefix}.asm"),
+                 scalar_data_mem=DataMemory(
+                     load_path=in_dir / f"{file_prefix}_SDMEM.txt",
+                     dump_path=out_dir / f"{file_prefix}_SDMEMOP.txt",
+                     **Core.common_params.scalar_datamem,
+                 ),
+                 vector_data_mem=DataMemory(
+                     load_path=in_dir / f"{file_prefix}_VDMEM.txt",
+                     dump_path=out_dir / f"{file_prefix}_VDMEMOP.txt",
+                     **Core.common_params.vector_datamem,
+                 ))
+    return vcore
 
-        vcore = Core(scalar_register_file=RegisterFile(
-            dump_path=tempdir / f"{file_prefix}_SRF.txt",
-            **Core.common_params.scalar_regfile,
-        ),
-                     vector_register_file=RegisterFile(
-                         dump_path=tempdir / f"{file_prefix}_VRF.txt",
-                         **Core.common_params.vector_regfile,
-                     ),
-                     instruction_mem=InstructionMemory(load_path=golden_dir /
-                                                       f"{file_prefix}.asm"),
-                     scalar_data_mem=DataMemory(
-                         load_path=golden_dir / f"{file_prefix}_SDMEM.txt",
-                         dump_path=tempdir / f"{file_prefix}_SDMEMOP.txt",
-                         **Core.common_params.scalar_datamem,
-                     ),
-                     vector_data_mem=DataMemory(
-                         load_path=golden_dir / f"{file_prefix}_VDMEM.txt",
-                         dump_path=tempdir / f"{file_prefix}_VDMEMOP.txt",
-                         **Core.common_params.vector_datamem,
-                     ))
-        return vcore
+
+class TestIntegratedSmallProgram(BaseTestWithTempDir):
+    """Run small programs that uses multiple instructions
+    """
 
     def test_accumulate_array(self):
         """Test accumulate values in an array
         """
         test_prefix = "accumulate"
-        vcore = self.get_core(self.temp_dir, test_prefix)
+        vcore = get_core(golden_dir, self.temp_dir, test_prefix)
 
         vcore.run()
         self.assertEqual(vcore.SR5, 55)
@@ -92,7 +94,7 @@ class TestProcessorCore(BaseTestWithTempDir):
         """Test scalar load store instructions
         """
         test_prefix = "scalar_load_store"
-        vcore = self.get_core(self.temp_dir, test_prefix)
+        vcore = get_core(golden_dir, self.temp_dir, test_prefix)
 
         # Test load
         # source before operation
@@ -138,7 +140,7 @@ class TestProcessorCore(BaseTestWithTempDir):
         """Test scalar add/subtract
         """
         test_prefix = "add_sub"
-        vcore = self.get_core(self.temp_dir, test_prefix)
+        vcore = get_core(golden_dir, self.temp_dir, test_prefix)
 
         vcore.run()
 
@@ -151,7 +153,7 @@ class TestProcessorCore(BaseTestWithTempDir):
         """Test vector load store instructions
         """
         test_prefix = "vector_load_store"
-        vcore = self.get_core(self.temp_dir, test_prefix)
+        vcore = get_core(golden_dir, self.temp_dir, test_prefix)
 
         # Test load
         # source before operation
@@ -177,7 +179,7 @@ class TestProcessorCore(BaseTestWithTempDir):
         """Test vector add/subtract
         """
         test_prefix = "vector_add_sub"
-        vcore = self.get_core(self.temp_dir, test_prefix)
+        vcore = get_core(golden_dir, self.temp_dir, test_prefix)
 
         # destination before operation
         self.assertEqual(vcore.vector_data_mem[64 * 2:64 * 3], [0] * 64)
@@ -193,7 +195,7 @@ class TestProcessorCore(BaseTestWithTempDir):
         """Test if program stops before EOF after a HALT
         """
         test_prefix = "halt"
-        vcore = self.get_core(self.temp_dir, test_prefix)
+        vcore = get_core(golden_dir, self.temp_dir, test_prefix)
 
         # Test load
         # destination before operation
