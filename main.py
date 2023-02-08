@@ -97,7 +97,7 @@ class RegisterFile(FileMap):
         self.vec_size = vec_size
         self.word_size = word_size
         # TODO: do get/set min/max value check
-        self._data = [
+        self.__data = [
             [0x0 for scalar in range(vec_size)] for reg in range(n_reg)
         ]
         self.vector_mask_register = [1] * vec_size
@@ -119,13 +119,13 @@ class RegisterFile(FileMap):
         if self.vec_size == 1:
             # scalar register
             assert index < self.n_reg, "index too large"
-            dprint(f" = {self._data[index][0]}", debug_level=2)
-            return self._data[index][0]
+            dprint(f" = {self.__data[index][0]}", debug_level=2)
+            return self.__data[index][0]
         else:
             # vector register
             assert index < self.vec_size, "index too large"
-            dprint(f" = {self._data[index]}", debug_level=2)
-            return self._data[index]
+            dprint(f" = {self.__data[index]}", debug_level=2)
+            return self.__data[index]
 
     def __setitem__(self, index, value):
         """Syntax sugar to directly set the underlying registers without
@@ -139,11 +139,11 @@ class RegisterFile(FileMap):
         if self.vec_size == 1:
             # scalar register
             assert index < self.n_reg, "index too large"
-            self._data[index][0] = value
+            self.__data[index][0] = value
         else:
             # vector register
             assert index < self.vec_size, "index too large"
-            self._data[index] = value
+            self.__data[index] = value
 
     @typing.final
     def load(self):
@@ -168,7 +168,7 @@ class RegisterFile(FileMap):
         lines += [
             row_format.format(*[str(val)
                                 for val in data])
-            for data in self._data
+            for data in self.__data
         ]
         return "\n".join(lines) + "\n"
 
@@ -194,7 +194,7 @@ class DataMemory(FileMap):
         super().__init__(load_path, dump_path)
         self.size_limit = pow(2, address_length)
         # TODO: do get/set min/max value check
-        self._data = [0x0 for word in range(self.size_limit)]
+        self.__data = [0x0 for word in range(self.size_limit)]
         # get type assuming standard naming scheme: S/V+DMEM for scalar/vector
         self.type = str(load_path)[-9] if len(str(load_path)) >= 9 else ""
         self.type = self.type if self.type in "SV" else "?"
@@ -217,9 +217,9 @@ class DataMemory(FileMap):
         assert upper_index < self.size_limit, "address too large"
 
         dprint(bgcolor("blue")(f"{self.type}mem read "),
-               f"{lower_index:010_d} = {self._data[key]}",
+               f"{lower_index:010_d} = {self.__data[key]}",
                debug_level=2)
-        return self._data[key]
+        return self.__data[key]
 
     def __setitem__(self, key, value) -> int:
         """Syntax sugar to directly set the underlying cells without meddling
@@ -237,13 +237,13 @@ class DataMemory(FileMap):
         assert upper_index < self.size_limit, "address too large"
 
         dprint(bgcolor("blue")(f"{self.type}mem write"),
-               f"0x{lower_index:010_d} = {self._data[key]}",
+               f"0x{lower_index:010_d} = {self.__data[key]}",
                debug_level=2)
-        self._data[key] = value
+        self.__data[key] = value
 
     @property
     def internal_state(self) -> str:
-        lines = [str(word) for word in self._data]  # stdout buffer
+        lines = [str(word) for word in self.__data]  # stdout buffer
         return "\n".join(lines) + "\n"
 
     @internal_state.setter
@@ -251,9 +251,9 @@ class DataMemory(FileMap):
         mem_words = [int(line.strip()) for line in file.readlines()]
         n_words = len(mem_words)
         assert n_words < self.size_limit, "too much data"
-        self._data = mem_words
+        self.__data = mem_words
         # Pad the rest as zero
-        self._data.extend(0x0 for word in range(self.size_limit - n_words))
+        self.__data.extend(0x0 for word in range(self.size_limit - n_words))
 
 
 class InstructionMemory(FileMap):
