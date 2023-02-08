@@ -123,6 +123,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.vector_register_file[1] = list(reversed(range(64)))
         vcore.run()
         self.assertEqual([63] * 64, vcore.VR3)
+        gather_stats(vcore)
 
     def test_1_SUBVV(self):
         instruction = self.current_instruction()
@@ -140,6 +141,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.vector_register_file[1] = list(range(1, 65))
         vcore.run()
         self.assertEqual([-1] * 64, vcore.VR3)
+        gather_stats(vcore)
 
     def test_2_ADDVS(self):
         instruction = self.current_instruction()
@@ -157,6 +159,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.scalar_register_file[1] = -2
         vcore.run()
         self.assertEqual(list(range(1, 65)), vcore.VR3)
+        gather_stats(vcore)
 
     def test_2_SUBVS(self):
         instruction = self.current_instruction()
@@ -174,6 +177,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.scalar_register_file[1] = 63
         vcore.run()
         self.assertEqual(list(range(-63, 1)), vcore.VR3)
+        gather_stats(vcore)
 
     def test_3_MULVV(self):
         instruction = self.current_instruction()
@@ -191,6 +195,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.vector_register_file[1] = list(range(64))
         vcore.run()
         self.assertEqual([i * i for i in range(64)], vcore.VR3)
+        gather_stats(vcore)
 
     def test_3_DIVVV(self):
         instruction = self.current_instruction()
@@ -208,6 +213,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.vector_register_file[1] = list(range(1, 65))
         vcore.run()
         self.assertEqual(list(range(1, 65)), vcore.VR3)
+        gather_stats(vcore)
 
     def test_4_MULVS(self):
         instruction = self.current_instruction()
@@ -225,6 +231,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.scalar_register_file[1] = 2
         vcore.run()
         self.assertEqual([i * 2 for i in range(64)], vcore.VR3)
+        gather_stats(vcore)
 
     def test_4_DIVVS(self):
         instruction = self.current_instruction()
@@ -242,6 +249,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.scalar_register_file[1] = 2
         vcore.run()
         self.assertEqual([i // 2 for i in range(64)], vcore.VR3)
+        gather_stats(vcore)
 
     def test_5_SEQVV(self):
         pass  # @todo Test SEQVV
@@ -362,13 +370,16 @@ class TestSingleInstruction(BaseTestWithTempDir):
         code, scalar_mem, vector_mem = self.generate(
             self.temp_dir,
             instruction,
-            code="HALT\t\nABRACADABRA",
+            code=("HALT "
+                  "\n"
+                  "ABRACADABRA"),
             scalar_mem=[0],
             vector_mem=[0],
         )
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
         vcore.run()  # asserts that no exception is raised
+        gather_stats(vcore)
 
 
 class TestIntegratedSmallProgram(BaseTestWithTempDir):
