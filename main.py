@@ -419,6 +419,7 @@ class ALU:
         vrf = self.core.vector_register_file
 
         operation_code = functionality["vector_op"].lower()
+        operation_code = "floordiv" if operation_code == "div" else operation_code
         operand_type = functionality["vec_op_type"]
 
         operand2 = vrf[self.reg_index(instruction["operand2"])]

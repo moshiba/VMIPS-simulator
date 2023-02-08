@@ -174,6 +174,41 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.scalar_register_file[1] = 63
         vcore.run()
         self.assertEqual(list(range(-63, 1)), vcore.VR3)
+
+    def test_3_MULVV(self):
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="MULVV VR3 VR1 VR2",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+
+        vcore.vector_register_file[0] = list(range(64))
+        vcore.vector_register_file[1] = list(range(64))
+        vcore.run()
+        self.assertEqual([i * i for i in range(64)], vcore.VR3)
+
+    def test_3_DIVVV(self):
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="DIVVV VR3 VR1 VR2",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+
+        vcore.vector_register_file[0] = [i * i for i in range(1, 65)]
+        vcore.vector_register_file[1] = list(range(1, 65))
+        vcore.run()
+        self.assertEqual(list(range(1, 65)), vcore.VR3)
+
 class TestIntegratedSmallProgram(BaseTestWithTempDir):
     """Run small programs that uses multiple instructions
     """
