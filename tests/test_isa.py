@@ -358,7 +358,17 @@ class TestSingleInstruction(BaseTestWithTempDir):
         pass  # @todo Test BLE
 
     def test_24_HALT(self):
-        pass  # @todo Test HALT
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="HALT\t\nABRACADABRA",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.run()  # asserts that no exception is raised
 
 
 class TestIntegratedSmallProgram(BaseTestWithTempDir):

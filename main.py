@@ -396,6 +396,9 @@ class ALU:
             return  # Skip no-op statements such as comments
 
         functionality = self._match_func_type_regex.match(instruction)
+        if functionality is None:
+            raise RuntimeError(
+                f"Unknown instruction: {parsed_instruction.string}")
         # As all these instruction-name-format groups are disjoint, only one
         # type would match. So if there are some match then they must all belong
         # to the same instruction.
