@@ -143,7 +143,7 @@ class TestProcessorCore(BaseTestWithTempDir):
         vcore.run()
 
         self.assertEqual(5, vcore.SR7)
-        self.assertEqual(-5&0xFFFF_FFFF, vcore.SR8)
+        self.assertEqual(-5, vcore.SR8)
 
         gather_stats(vcore)
 

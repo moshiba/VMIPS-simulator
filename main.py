@@ -1,6 +1,8 @@
 import abc
 import argparse
+import collections.abc
 import copy
+import array
 import functools
 import io
 import itertools
@@ -41,6 +43,71 @@ def color(color_str: str, background=False):
 
 
 bgcolor = functools.partial(color, background=True)
+
+
+@functools.total_ordering
+class StaticLengthArray(collections.abc.Sequence):
+    """List, but with a static size
+    """
+
+    def __init__(self, iterable, /, container_type=list) -> None:
+        self.__data = container_type(iterable)
+        self.size = len(self.__data)
+
+    def __getitem__(self, index):
+        assert self.size == len(self.__data)
+        return self.__data[index]
+
+    def __len__(self):
+        assert self.size == len(self.__data)
+        return self.size
+
+    def __setitem__(self, index, value):
+        # Provide this but not all other 'MutableSequence' methods
+        self.__data[index] = value
+        assert self.size == len(self.__data)
+
+    def __eq__(self, other):
+        return self.__data == other
+
+    def __lt__(self, other):
+        return self.__data < other
+
+    def __str__(self):
+        return str(self.__data.tolist())
+
+
+@functools.total_ordering
+class SignedInt32Array(StaticLengthArray):
+    """Static sized array with SignedInt32 value format
+    read/write value range check included
+    """
+
+    def __init__(self, iterable) -> None:
+        # Choose the right type that gives a 4-byte signed integer
+        if array.array("i").itemsize == 4:
+            self.type_code = "i"
+        elif array.array("l").itemsize == 4:
+            self.type_code = "l"
+        else:
+            # Failed to find a native type that represents 32-bit signed int
+            super().__init__(iterable)
+            return
+        s32_array = array.array(self.type_code, iterable)
+        super().__init__(s32_array, container_type=lambda x: x)
+
+    def __setitem__(self, index, value):
+        if isinstance(index, slice):
+            value = array.array(self.type_code, value)
+        super().__setitem__(index, value)
+        assert self.size == len(self)
+
+    def __eq__(self, other):
+        return self._StaticLengthArray__data.tolist() == other
+
+    def __lt__(self, other):
+        return self._StaticLengthArray__data.tolist() < other
+
 
 class FileMap(abc.ABC):
     """Base class for internal state persistence.
@@ -97,9 +164,10 @@ class RegisterFile(FileMap):
         self.vec_size = vec_size
         self.word_size = word_size
         # TODO: do get/set min/max value check
-        self.__data = [
-            [0x0 for scalar in range(vec_size)] for reg in range(n_reg)
-        ]
+        self.__data = StaticLengthArray(
+            SignedInt32Array(0x0
+                             for scalar in range(vec_size))
+            for reg in range(n_reg))
         self.vector_mask_register = [1] * vec_size
         self.vector_length_register = vec_size
         # get type assuming standard naming scheme: S/V+RF for scalar/vector
@@ -364,8 +432,7 @@ class ALU:
                                instruction.groupdict())
 
         vrf[self.reg_index(instruction["operand1"])] = list(
-            i & 0xFFFF_FFFF
-            for i in map(getattr(operator, operation_code), operand2, operand3))
+            map(getattr(operator, operation_code), operand2, operand3))
 
     def vec_mask_reg(self, functionality, instruction):
         # TODO: test masked vector arithmetics
@@ -475,13 +542,10 @@ class ALU:
         if operation_code == "srl":
             # Python stores integers in large containers
             # logical right shift needs special steps
-            operand2 &= 0xFFFF_FFFF  # strips (possible) 1-s higher than 32-bits
-            srf[self.reg_index(
-                instruction["operand1"])] = (operand2 & 0xFFFF_FFFF) >> operand3
+            srf[self.reg_index(instruction["operand1"])] = operand2 >> operand3
             return
         operation = operator.methodcaller(operation_code, operand2, operand3)
-        srf[self.reg_index(
-            instruction["operand1"])] = operation(operator) & 0xFFFF_FFFF
+        srf[self.reg_index(instruction["operand1"])] = operation(operator)
 
     def control(self, functionality, instruction):
         condition = functionality["branch_condition"].lower()
