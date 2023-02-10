@@ -163,7 +163,6 @@ class RegisterFile(FileMap):
         self.n_reg = n_reg
         self.vec_size = vec_size
         self.word_size = word_size
-        # TODO: do get/set min/max value check
         self.__data = StaticLengthArray(
             SignedInt32Array(0x0
                              for scalar in range(vec_size))
@@ -261,8 +260,7 @@ class DataMemory(FileMap):
     ):
         super().__init__(load_path, dump_path)
         self.size_limit = pow(2, address_length)
-        # TODO: do get/set min/max value check
-        self.__data = [0x0 for word in range(self.size_limit)]
+        self.__data = SignedInt32Array(0x0 for word in range(self.size_limit))
         # get type assuming standard naming scheme: S/V+DMEM for scalar/vector
         self.type = str(load_path)[-9] if len(str(load_path)) >= 9 else ""
         self.type = self.type if self.type in "SV" else "?"
@@ -304,10 +302,10 @@ class DataMemory(FileMap):
         assert 0 <= lower_index, "address too small"
         assert upper_index < self.size_limit, "address too large"
 
+        self.__data[key] = value
         dprint(bgcolor("blue")(f"{self.type}mem write"),
                f"0x{lower_index:010_d} = {self.__data[key]}",
                debug_level=2)
-        self.__data[key] = value
 
     @property
     def internal_state(self) -> str:
