@@ -253,99 +253,131 @@ class TestSingleInstruction(BaseTestWithTempDir):
         self.assertEqual([i // 2 for i in range(64)], vcore.VR3)
         gather_stats(vcore)
 
+    @unittest.skip("TODO")
     def test_5_SEQVV(self):
         pass  # @todo Test SEQVV
 
+    @unittest.skip("TODO")
     def test_5_SNEVV(self):
         pass  # @todo Test SNEVV
 
+    @unittest.skip("TODO")
     def test_5_SGTVV(self):
         pass  # @todo Test SGTVV
 
+    @unittest.skip("TODO")
     def test_5_SLTVV(self):
         pass  # @todo Test SLTVV
 
+    @unittest.skip("TODO")
     def test_5_SGEVV(self):
         pass  # @todo Test SGEVV
 
+    @unittest.skip("TODO")
     def test_5_SLEVV(self):
         pass  # @todo Test SEQVV
 
+    @unittest.skip("TODO")
     def test_6_SEQVS(self):
         pass  # @todo Test SEQVS
 
+    @unittest.skip("TODO")
     def test_6_SNEVS(self):
         pass  # @todo Test SNEVS
 
+    @unittest.skip("TODO")
     def test_6_SGTVS(self):
         pass  # @todo Test SGTVS
 
+    @unittest.skip("TODO")
     def test_6_SLTVS(self):
         pass  # @todo Test SLTVS
 
+    @unittest.skip("TODO")
     def test_6_SGEVS(self):
         pass  # @todo Test SGEVS
 
+    @unittest.skip("TODO")
     def test_6_SLEVS(self):
         pass  # @todo Test SLEVS
 
+    @unittest.skip("TODO")
     def test_7_CVM(self):
         pass  # @todo Test CVM
 
+    @unittest.skip("TODO")
     def test_8_POP(self):
         pass  # @todo Test POP
 
+    @unittest.skip("TODO")
     def test_9_MTCL(self):
         pass  # @todo Test MTCL
 
+    @unittest.skip("TODO")
     def test_10_MFCL(self):
         pass  # @todo Test MFCL
 
+    @unittest.skip("TODO")
     def test_11_LV(self):
         pass  # @todo Test LV
 
+    @unittest.skip("TODO")
     def test_12_SV(self):
         pass  # @todo Test SV
 
+    @unittest.skip("TODO")
     def test_13_LVWS(self):
         pass  # @todo Test LVWS
 
+    @unittest.skip("TODO")
     def test_14_SVWS(self):
         pass  # @todo Test SVWS
 
+    @unittest.skip("TODO")
     def test_15_LVI(self):
         pass  # @todo Test LVI
 
+    @unittest.skip("TODO")
     def test_16_SVI(self):
         pass  # @todo Test SVI
 
+    @unittest.skip("TODO")
     def test_17_LS(self):
         pass  # @todo Test LS
 
+    @unittest.skip("TODO")
     def test_18_SS(self):
         pass  # @todo Test SS
 
+    @unittest.skip("TODO")
     def test_19_ADD(self):
         pass  # @todo Test ADD
 
+    @unittest.skip("TODO")
     def test_19_SUB(self):
         pass  # @todo Test SUB
 
+    @unittest.skip("TODO")
     def test_20_AND(self):
         pass  # @todo Test AND
 
+    @unittest.skip("TODO")
     def test_20_OR(self):
         pass  # @todo Test OR
 
+    @unittest.skip("TODO")
     def test_20_XOR(self):
         pass  # @todo Test XOR
 
+    @unittest.skip("TODO")
     def test_21_SLL(self):
         pass  # @todo Test SLL
 
+    @unittest.skip("TODO")
     def test_21_SRL(self):
         pass  # @todo Test SRL
 
+    @unittest.skip("TODO")
     def test_22_SRA(self):
         pass  # @todo Test SRA
 
