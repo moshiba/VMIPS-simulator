@@ -34,4 +34,4 @@ jobs:
       - name: Test
         working-directory: ./
         run: |
-          python3 -m unittest discover tests "test_*.py" -v
+          python3 -W ignore::ResourceWarning -m unittest discover tests "test_*.py" -v

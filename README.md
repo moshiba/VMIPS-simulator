@@ -3,5 +3,5 @@
 ## Test
 
 ```
-DEBUG=2 python3 -B -m unittest discover tests 'test_*.py' -v
+DEBUG=2 python3 -W ignore::ResourceWarning -m unittest discover tests "test_*.py" -v
 ```
