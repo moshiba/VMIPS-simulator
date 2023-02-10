@@ -674,6 +674,12 @@ class Core:
         while self.freeze is not True:
             self.step()
 
+    def dump(self, path: pathlib.Path = None):
+        self.scalar_register_file.dump(path)
+        self.vector_register_file.dump(path)
+        self.scalar_data_mem.dump(path)
+        self.vector_data_mem.dump(path)
+
     # Common parameters for components
     class AttrDict(dict):
 

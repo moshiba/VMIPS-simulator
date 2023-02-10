@@ -38,7 +38,10 @@ class TestDotProduct(unittest.TestCase):
 
         vcore.run()
 
-        self.assertEqual(sum(i * i for i in range(450)), 30273825)
-        self.assertEqual(30273825, sum(vcore.VR3))
+        print(f"{vcore.vector_register_file.vector_length_register = }")
+        print(f"{vcore.VM2048 = }")
 
-        vcore.vector_data_mem.dump()
+        self.assertEqual(sum(i * i for i in range(450)),
+                         vcore.vector_data_mem[2048])
+
+        vcore.dump()

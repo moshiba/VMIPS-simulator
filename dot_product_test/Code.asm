@@ -36,4 +36,18 @@ ADD   SR2 SR2 SR3  # pointer += step
 BNE   SR2 SR5 -6   # loop, if pointer < element_size
 
 # Gather result
+LS    SR6 SR1 3    # load loop end condition: vector_length == 1
+SV    VR3 SR2      # save scattered result
+SRA   SR3 SR3 SR6  # vector_length /= 2 (initially at 64)
+MTCL  SR3          # set new vector_length
+LV    VR3 SR2      # load previously stored data as two smaller vectors (higher half)
+ADD   SR2 SR2 SR3  # update pointer to load next partition
+LV    VR4 SR2      # load previously stored data as two smaller vectors (lower half)
+ADD   SR2 SR2 SR3  # update pointer to next head
+ADDVV VR3 VR3 VR4  # sum these two smaller vectors
+BNE   SR3 SR6 -9   # loop, if vector_length > 1 
+
+# Store result to designated address
+LS    SR6 SR1 4    # load target address: 2048
+SV    VR3 SR6      # save final result
 HALT
