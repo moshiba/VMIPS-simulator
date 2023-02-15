@@ -301,21 +301,21 @@ class TestSingleInstruction(BaseTestWithTempDir):
     def test_6_SLEVS(self):
         pass  # @todo Test SLEVS
 
-    @unittest.skip("TODO")
     def test_7_CVM(self):
-    instruction = self.current_instruction()
-    code, scalar_mem, vector_mem = self.generate(
-        self.temp_dir,
-        instruction,
-        code="CVM",
-        vector_mem=[0],
-    )
-    vcore = get_core(self.temp_dir, self.temp_dir,
-                     f"single_instr_test_{instruction}")
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="CVM",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
 
-    vcore.vector_register_file[0] = [1]*64
-    vcore.run()
-    gather_stats(vcore)
+        vcore.vector_register_file[0] = [1] * 64
+        vcore.run()
+        gather_stats(vcore)
 
     @unittest.skip("TODO")
     def test_8_POP(self):
