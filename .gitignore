@@ -1,3 +1,17 @@
+##########################
+# Editing tools and IDEs
+##########################
+[._]*.sw[a-p]
+[._]*.s[a-v][a-z]
+*~
+~*
+\#*\#
+\.#*
+.vscode/
+
+##########################
+# Python
+##########################
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
