@@ -351,7 +351,21 @@ class TestSingleInstruction(BaseTestWithTempDir):
 
     @unittest.skip("TODO")
     def test_19_ADD(self):
-        pass  # @todo Test ADD
+        instruction = self.current_instruction()
+        code, scalar_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="ADD SR3 SR1 SR2",
+            scalar_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+
+        vcore.scalar_register_file[0] = list(range(64))
+        vcore.scalar_register_file[1] = list(range(64))
+        vcore.run()
+        self.assertEqual(list(range(1, 65)), vcore.SR3)
+        gather_stats(vcore)
 
     @unittest.skip("TODO")
     def test_19_SUB(self):
