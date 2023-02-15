@@ -442,7 +442,7 @@ class ALU:
         vrf = self.core.vector_register_file
 
         if functionality["clear_mask"]:  # CVM
-            vrf.vector_mask_register = [1] * vrf.vec_size
+            vrf.vector_mask_register = StaticLengthArray([1] * vrf.vec_size)
 
         elif functionality["count_mask"]:  # POP
             srf[self.reg_index(
@@ -458,7 +458,7 @@ class ALU:
                 operand2 = itertools.cycle(srf[self.reg_index(
                     instruction["operand2"])])
 
-            vrf.vector_mask_register = list(
+            vrf.vector_mask_register = StaticLengthArray(
                 map(getattr(operator, operation_code), operand1, operand2))
 
         else:
