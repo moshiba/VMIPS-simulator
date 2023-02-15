@@ -167,7 +167,7 @@ class RegisterFile(FileMap):
             SignedInt32Array(0x0
                              for scalar in range(vec_size))
             for reg in range(n_reg))
-        self.vector_mask_register = [1] * vec_size
+        self.vector_mask_register = StaticLengthArray([1] * vec_size)
         self.vector_length_register = vec_size
         # get type assuming standard naming scheme: S/V+RF for scalar/vector
         self.type = str(dump_path)[-7] if len(str(dump_path)) >= 7 else ""
