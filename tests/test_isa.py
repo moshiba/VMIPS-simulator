@@ -88,7 +88,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
             inspect.currentframe().f_back.f_code.co_name)["instr"]
 
     @classmethod
-    def generate(cls, tempdir: pathlib.Path, instruction: str, code: str,
+    def generate(cls, /, tempdir: pathlib.Path, instruction: str, code: str,
                  scalar_mem: list[int], vector_mem: list[int]) -> str:
         """Generates code with template
         """
