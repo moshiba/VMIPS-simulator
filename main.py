@@ -50,7 +50,7 @@ class StaticLengthArray(collections.abc.Sequence):
     """List, but with a static size
     """
 
-    def __init__(self, iterable, /, container_type=list) -> None:
+    def __init__(self, iterable, *, container_type=list) -> None:
         self.__data = container_type(iterable)
         self.size = len(self.__data)
 
@@ -116,7 +116,7 @@ class FileMap(abc.ABC):
     or at-load/dump-time designated location.
     """
 
-    def __init__(self, /, load_path: str, dump_path: str = None):
+    def __init__(self, *, load_path: str, dump_path: str = None):
         self.load_path = pathlib.Path(load_path)
         self.dump_path = pathlib.Path(dump_path or load_path)
 
@@ -153,7 +153,7 @@ class RegisterFile(FileMap):
 
     def __init__(
             self,
-            /,
+            *,
             dump_path: str,
             n_reg: int,  # number of registers
             vec_size: int = 1,  # number of words in a vector register
@@ -253,7 +253,7 @@ class DataMemory(FileMap):
 
     def __init__(
             self,
-            /,
+            *,
             load_path: str,
             dump_path: str,
             address_length: int,  # in bits
@@ -326,7 +326,7 @@ class InstructionMemory(FileMap):
     """Configurable instruction memory
     """
 
-    def __init__(self, /, load_path: str):
+    def __init__(self, *, load_path: str):
         super().__init__(load_path=load_path, dump_path="")
         self.size_limit = pow(2, 16)
         self.instructions = tuple()
