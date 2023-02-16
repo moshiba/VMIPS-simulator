@@ -88,7 +88,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
             inspect.currentframe().f_back.f_code.co_name)["instr"]
 
     @classmethod
-    def generate(cls, tempdir: pathlib.Path, instruction: str, code: str,
+    def generate(cls, tempdir: pathlib.Path, instruction: str, *, code: str,
                  scalar_mem: list[int], vector_mem: list[int]) -> str:
         """Generates code with template
         """
@@ -301,9 +301,30 @@ class TestSingleInstruction(BaseTestWithTempDir):
     def test_6_SLEVS(self):
         pass  # @todo Test SLEVS
 
-    @unittest.skip("TODO")
     def test_7_CVM(self):
-        pass  # @todo Test CVM
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="CVM",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+
+        vec_size = vcore.vector_register_file.vec_size
+        # Add zeros into the VMR and confirm the contents
+        for i in range(vec_size):
+            vcore.vector_register_file.vector_mask_register[i] = i % 2
+        self.assertTrue(0 in vcore.vector_register_file.vector_mask_register)
+        # Run CVM and confirm the results
+        vcore.run()
+        self.assertTrue(
+            all(
+                filter(lambda x: x == 1,
+                       vcore.vector_register_file.vector_mask_register)))
+        gather_stats(vcore)
 
     @unittest.skip("TODO")
     def test_8_POP(self):

@@ -50,7 +50,7 @@ class StaticLengthArray(collections.abc.Sequence):
     """List, but with a static size
     """
 
-    def __init__(self, iterable, /, container_type=list) -> None:
+    def __init__(self, iterable, *, container_type=list) -> None:
         self.__data = container_type(iterable)
         self.size = len(self.__data)
 
@@ -116,7 +116,7 @@ class FileMap(abc.ABC):
     or at-load/dump-time designated location.
     """
 
-    def __init__(self, /, load_path: str, dump_path: str = None):
+    def __init__(self, *, load_path: str, dump_path: str = None):
         self.load_path = pathlib.Path(load_path)
         self.dump_path = pathlib.Path(dump_path or load_path)
 
@@ -153,7 +153,7 @@ class RegisterFile(FileMap):
 
     def __init__(
             self,
-            /,
+            *,
             dump_path: str,
             n_reg: int,  # number of registers
             vec_size: int = 1,  # number of words in a vector register
@@ -167,7 +167,7 @@ class RegisterFile(FileMap):
             SignedInt32Array(0x0
                              for scalar in range(vec_size))
             for reg in range(n_reg))
-        self.vector_mask_register = [1] * vec_size
+        self.vector_mask_register = StaticLengthArray([1] * vec_size)
         self.vector_length_register = vec_size
         # get type assuming standard naming scheme: S/V+RF for scalar/vector
         self.type = str(dump_path)[-7] if len(str(dump_path)) >= 7 else ""
@@ -253,12 +253,12 @@ class DataMemory(FileMap):
 
     def __init__(
             self,
-            /,
+            *,
             load_path: str,
             dump_path: str,
             address_length: int,  # in bits
     ):
-        super().__init__(load_path, dump_path)
+        super().__init__(load_path=load_path, dump_path=dump_path)
         self.size_limit = pow(2, address_length)
         self.__data = SignedInt32Array(0x0 for word in range(self.size_limit))
         # get type assuming standard naming scheme: S/V+DMEM for scalar/vector
@@ -326,7 +326,7 @@ class InstructionMemory(FileMap):
     """Configurable instruction memory
     """
 
-    def __init__(self, /, load_path: str):
+    def __init__(self, *, load_path: str):
         super().__init__(load_path=load_path, dump_path="")
         self.size_limit = pow(2, 16)
         self.instructions = tuple()
@@ -442,7 +442,7 @@ class ALU:
         vrf = self.core.vector_register_file
 
         if functionality["clear_mask"]:  # CVM
-            vrf.vector_mask_register = [1] * vrf.vec_size
+            vrf.vector_mask_register = StaticLengthArray([1] * vrf.vec_size)
 
         elif functionality["count_mask"]:  # POP
             srf[self.reg_index(
@@ -458,7 +458,7 @@ class ALU:
                 operand2 = itertools.cycle(srf[self.reg_index(
                     instruction["operand2"])])
 
-            vrf.vector_mask_register = list(
+            vrf.vector_mask_register = StaticLengthArray(
                 map(getattr(operator, operation_code), operand1, operand2))
 
         else:
