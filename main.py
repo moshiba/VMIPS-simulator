@@ -258,7 +258,7 @@ class DataMemory(FileMap):
             dump_path: str,
             address_length: int,  # in bits
     ):
-        super().__init__(load_path, dump_path)
+        super().__init__(load_path=load_path, dump_path=dump_path)
         self.size_limit = pow(2, address_length)
         self.__data = SignedInt32Array(0x0 for word in range(self.size_limit))
         # get type assuming standard naming scheme: S/V+DMEM for scalar/vector
