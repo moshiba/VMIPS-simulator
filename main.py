@@ -564,7 +564,7 @@ class ALU:
 
         if compare_result is True:
             # Branch taken
-            self.core.PC += immediate
+            self.core.PC += immediate - 1
         else:
             # Branch not taken
             pass

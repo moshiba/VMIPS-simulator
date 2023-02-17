@@ -33,7 +33,7 @@ LV    VR2 SR2      # load vector starting from address [SR2]
 MULVV VR1 VR1 VR2  # multiply and save product to tmp1
 ADDVV VR3 VR3 VR1  # sum += tmp
 ADD   SR2 SR2 SR3  # pointer += step
-BNE   SR2 SR5 -6   # loop, if pointer < element_size
+BNE   SR2 SR5 -5   # loop, if pointer < element_size
 
 # Gather result
 LS    SR6 SR1 3    # load loop end condition: vector_length == 1
@@ -45,7 +45,7 @@ ADD   SR2 SR2 SR3  # update pointer to load next partition
 LV    VR4 SR2      # load previously stored data as two smaller vectors (lower half)
 ADD   SR2 SR2 SR3  # update pointer to next head
 ADDVV VR3 VR3 VR4  # sum these two smaller vectors
-BNE   SR3 SR6 -9   # loop, if vector_length > 1 
+BNE   SR3 SR6 -8   # loop, if vector_length > 1 
 
 # Store result to designated address
 LS    SR6 SR1 4    # load target address: 2048

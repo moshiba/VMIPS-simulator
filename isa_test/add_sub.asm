@@ -22,7 +22,7 @@ LS  SR2 SR1 0    # load pointer increment size: 1
 LS  SR4 SR3 0    # load data into temp value holder
 ADD SR5 SR5 SR4  # add temp to sum
 ADD SR3 SR3 SR2  # pointer += 1
-BLT SR3 SR6 -4   # loop if ptr<boundary
+BLT SR3 SR6 -3   # loop if ptr<boundary
 ADD SR7 SR5 SR1  # store result in SR7
 
 # Reset data-pointer, temp-data, accumulating-sum registers to zero
@@ -36,7 +36,7 @@ LS  SR2 SR1 0    # load pointer increment size: 1
 LS  SR4 SR3 0    # load data into temp value holder
 SUB SR5 SR5 SR4  # subtract temp from sum
 ADD SR3 SR3 SR2  # pointer += 1
-BLT SR3 SR6 -4   # loop if ptr<boundary
+BLT SR3 SR6 -3   # loop if ptr<boundary
 ADD SR8 SR5 SR1  # store result in SR8
 
 HALT

@@ -407,7 +407,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
         code, scalar_mem, vector_mem = self.generate(
             self.temp_dir,
             instruction,
-            code=("BEQ SR1 SR2 1"
+            code=("BEQ SR1 SR2 2"
                   "\n"
                   "ABRACADABRA"
                   "\n"
@@ -444,7 +444,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
         code, scalar_mem, vector_mem = self.generate(
             self.temp_dir,
             instruction,
-            code=("BNE SR1 SR2 1"
+            code=("BNE SR1 SR2 2"
                   "\n"
                   "ABRACADABRA"
                   "\n"
@@ -480,7 +480,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
         code, scalar_mem, vector_mem = self.generate(
             self.temp_dir,
             instruction,
-            code=("BGT SR1 SR2 1"
+            code=("BGT SR1 SR2 2"
                   "\n"
                   "ABRACADABRA"
                   "\n"
@@ -517,7 +517,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
         code, scalar_mem, vector_mem = self.generate(
             self.temp_dir,
             instruction,
-            code=("BLT SR1 SR2 1"
+            code=("BLT SR1 SR2 2"
                   "\n"
                   "ABRACADABRA"
                   "\n"
@@ -554,7 +554,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
         code, scalar_mem, vector_mem = self.generate(
             self.temp_dir,
             instruction,
-            code=("BGE SR1 SR2 1"
+            code=("BGE SR1 SR2 2"
                   "\n"
                   "ABRACADABRA"
                   "\n"
@@ -590,7 +590,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
         code, scalar_mem, vector_mem = self.generate(
             self.temp_dir,
             instruction,
-            code=("BLE SR1 SR2 1"
+            code=("BLE SR1 SR2 2"
                   "\n"
                   "ABRACADABRA"
                   "\n"

@@ -22,5 +22,5 @@ LS  SR3 SR1 0    # set iterating index: i to 1
 LS  SR6 SR3 0    # tmp = array[i]
 ADD SR5 SR5 SR6  # sum += tmp
 ADD SR3 SR3 SR2  # i+=1
-BLE SR3 SR4 -4   # loop if i != boundary
+BLE SR3 SR4 -3   # loop if i != boundary
 HALT
