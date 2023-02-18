@@ -510,21 +510,33 @@ class ALU:
         elif (strided := mem_type == "VWS") or mem_type == "V":  # vector
             stride = srf[self.reg_index(
                 instruction["operand3"])] if strided else 1
+            address_value = srf[self.reg_index(instruction["operand2"])]
             if action == "L":  # load
-                address_value = srf[self.reg_index(instruction["operand2"])]
                 mem_value = vmem[address_value:address_value +
                                  min(vrf.vec_size * stride, vlr):stride]
                 # reg = mem[reg]
                 vrf[self.reg_index(instruction["operand1"])][:vlr] = mem_value
             else:  # store
-                address_value = srf[self.reg_index(instruction["operand2"])]
                 value = vrf[self.reg_index(instruction["operand1"])][:vlr]
                 # mem[reg] = reg
                 vmem[address_value:address_value +
                      min(vrf.vec_size * stride, vlr):stride] = value
 
         elif mem_type == "VI":  # scatter/gather
-            raise NotImplementedError
+            base_address = srf[self.reg_index(instruction["operand2"])]
+            if action == "L":  # Load
+                mem_value = [
+                    vmem[base_address + offset]
+                    for offset in vrf[self.reg_index(instruction["operand3"])]
+                ]
+                vrf[self.reg_index(instruction["operand1"])] = mem_value
+            else:  # Store
+                reg_value = vrf[self.reg_index(instruction["operand1"])]
+                for scalar, offset in zip(
+                        reg_value,
+                        vrf[self.reg_index(instruction["operand3"])]):
+                    vmem[base_address + offset] = scalar
+
         else:
             raise RuntimeError("Unknown memory operation instruction:",
                                instruction.groupdict())
