@@ -60,7 +60,7 @@ class StaticLengthArray(collections.abc.Sequence):
 
     def __len__(self):
         assert self.size == len(self.__data)
-        return self.size
+        return len(self.__data)
 
     def __setitem__(self, index, value):
         # Provide this but not all other 'MutableSequence' methods
