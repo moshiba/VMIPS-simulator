@@ -1,8 +1,8 @@
 import abc
 import argparse
+import array
 import collections.abc
 import copy
-import array
 import functools
 import io
 import itertools
@@ -270,7 +270,6 @@ class DataMemory(FileMap):
         with internal variables.
         """
         # TODO: consider raising IndexError properly
-        # TODO: add tests for illegal address access
         if isinstance(key, slice):  # Access a slice
             lower_index = key.start or 0
             upper_index = key.stop - 1
