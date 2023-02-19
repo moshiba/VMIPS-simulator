@@ -487,29 +487,119 @@ class TestSingleInstruction(BaseTestWithTempDir):
                          vcore.vector_register_file.vector_mask_register)
         gather_stats(vcore)
 
-    @unittest.skip("TODO")
     def test_6_SEQVS(self):
-        pass  # @todo Test SEQVS
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("SEQVS VR1 SR2"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
+        vcore.scalar_register_file[1] = 32
+        vcore.run()
+        print(vcore.vector_register_file.vector_mask_register)
+        self.assertEqual([0] * 31 + [1] + [0] * 32,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
 
-    @unittest.skip("TODO")
     def test_6_SNEVS(self):
-        pass  # @todo Test SNEVS
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("SNEVS VR1 SR2"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
+        vcore.scalar_register_file[1] = 32
+        vcore.run()
+        print(vcore.vector_register_file.vector_mask_register)
+        self.assertEqual([1] * 31 + [0] + [1] * 32,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
 
-    @unittest.skip("TODO")
     def test_6_SGTVS(self):
-        pass  # @todo Test SGTVS
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("SGTVS VR1 SR2"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
+        vcore.scalar_register_file[1] = 32
+        vcore.run()
+        print(vcore.vector_register_file.vector_mask_register)
+        self.assertEqual([0] * 31 + [0] + [1] * 32,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
 
-    @unittest.skip("TODO")
     def test_6_SLTVS(self):
-        pass  # @todo Test SLTVS
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("SLTVS VR1 SR2"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
+        vcore.scalar_register_file[1] = 32
+        vcore.run()
+        print(vcore.vector_register_file.vector_mask_register)
+        self.assertEqual([1] * 31 + [0] + [0] * 32,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
 
-    @unittest.skip("TODO")
     def test_6_SGEVS(self):
-        pass  # @todo Test SGEVS
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("SGEVS VR1 SR2"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
+        vcore.scalar_register_file[1] = 32
+        vcore.run()
+        print(vcore.vector_register_file.vector_mask_register)
+        self.assertEqual([0] * 31 + [1] + [1] * 32,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
 
-    @unittest.skip("TODO")
     def test_6_SLEVS(self):
-        pass  # @todo Test SLEVS
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("SLEVS VR1 SR2"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
+        vcore.scalar_register_file[1] = 32
+        vcore.run()
+        print(vcore.vector_register_file.vector_mask_register)
+        self.assertEqual([1] * 31 + [1] + [0] * 32,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
 
     def test_7_CVM(self):
         instruction = self.current_instruction()
