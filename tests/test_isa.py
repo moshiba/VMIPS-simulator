@@ -253,29 +253,239 @@ class TestSingleInstruction(BaseTestWithTempDir):
         self.assertEqual([i // 2 for i in range(64)], vcore.VR3)
         gather_stats(vcore)
 
-    @unittest.skip("TODO")
     def test_5_SEQVV(self):
-        pass  # @todo Test SEQVV
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("SEQVV VR1 VR2"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        # case 1: VR1-0to7 > VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.run()
+        self.assertEqual([0] * 8 + [1] * 56,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
 
-    @unittest.skip("TODO")
+        # case 2: VR1-0to7 = VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.vector_register_file[1][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.run()
+        self.assertEqual([1] * 64,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
+
+        # case 3: VR1-0to7 < VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.run()
+        self.assertEqual([0] * 8 + [1] * 56,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
+
     def test_5_SNEVV(self):
-        pass  # @todo Test SNEVV
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("SNEVV VR1 VR2"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        # case 1: VR1-0to7 > VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.run()
+        self.assertEqual([1] * 8 + [0] * 56,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
 
-    @unittest.skip("TODO")
+        # case 2: VR1-0to7 = VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.vector_register_file[1][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.run()
+        self.assertEqual([0] * 64,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
+
+        # case 3: VR1-0to7 < VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.run()
+        self.assertEqual([1] * 8 + [0] * 56,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
+
     def test_5_SGTVV(self):
-        pass  # @todo Test SGTVV
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("SGTVV VR1 VR2"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        # case 1: VR1-0to7 > VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.run()
+        self.assertEqual([1] * 8 + [0] * 56,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
 
-    @unittest.skip("TODO")
+        # case 2: VR1-0to7 = VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.vector_register_file[1][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.run()
+        self.assertEqual([0] * 64,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
+
+        # case 3: VR1-0to7 < VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.run()
+        self.assertEqual([0] * 64,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
+
     def test_5_SLTVV(self):
-        pass  # @todo Test SLTVV
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("SLTVV VR1 VR2"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        # case 1: VR1-0to7 > VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.run()
+        self.assertEqual([0] * 64,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
 
-    @unittest.skip("TODO")
+        # case 2: VR1-0to7 = VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.vector_register_file[1][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.run()
+        self.assertEqual([0] * 64,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
+
+        # case 3: VR1-0to7 < VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.run()
+        self.assertEqual([1] * 8 + [0] * 56,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
+
     def test_5_SGEVV(self):
-        pass  # @todo Test SGEVV
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("SGEVV VR1 VR2"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        # case 1: VR1-0to7 > VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.run()
+        self.assertEqual([1] * 64,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
 
-    @unittest.skip("TODO")
+        # case 2: VR1-0to7 = VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.vector_register_file[1][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.run()
+        self.assertEqual([1] * 64,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
+
+        # case 3: VR1-0to7 < VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.run()
+        self.assertEqual([0] * 8 + [1] * 56,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
+
     def test_5_SLEVV(self):
-        pass  # @todo Test SEQVV
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("SLEVV VR1 VR2"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        # case 1: VR1-0to7 > VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.run()
+        self.assertEqual([0] * 8 + [1] * 56,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
+
+        # case 2: VR1-0to7 = VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.vector_register_file[1][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.run()
+        self.assertEqual([1] * 64,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
+
+        # case 3: VR1-0to7 < VR2-0to7
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.run()
+        self.assertEqual([1] * 64,
+                         vcore.vector_register_file.vector_mask_register)
+        gather_stats(vcore)
 
     @unittest.skip("TODO")
     def test_6_SEQVS(self):
