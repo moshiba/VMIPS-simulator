@@ -64,8 +64,8 @@ class StaticLengthArray(collections.abc.Sequence):
 
     def __setitem__(self, index, value):
         # Provide this but not all other 'MutableSequence' methods
-        self.__data[index] = value
         assert self.size == len(self.__data)
+        self.__data[index] = value
 
     def __eq__(self, other):
         return self.__data == other
@@ -74,7 +74,7 @@ class StaticLengthArray(collections.abc.Sequence):
         return self.__data < other
 
     def __str__(self):
-        return str(self.__data.tolist())
+        return str(self.__data)
 
 
 @functools.total_ordering
@@ -97,10 +97,11 @@ class SignedInt32Array(StaticLengthArray):
         super().__init__(s32_array, container_type=lambda x: x)
 
     def __setitem__(self, index, value):
+        assert self.size == len(self)
         if isinstance(index, slice):
+            # cast value type
             value = array.array(self.type_code, value)
         super().__setitem__(index, value)
-        assert self.size == len(self)
 
     def __eq__(self, other):
         return self._StaticLengthArray__data.tolist() == other
@@ -450,6 +451,7 @@ class ALU:
         elif (operation_code :=
               functionality["mask_condition"]) and (mask_type :=
                                                     functionality["mask_type"]):
+            operation_code = operation_code.lower()
             operand1 = vrf[self.reg_index(instruction["operand1"])]
             if mask_type == "V":
                 operand2 = vrf[self.reg_index(instruction["operand2"])]
@@ -458,7 +460,17 @@ class ALU:
                     instruction["operand2"])])
 
             vrf.vector_mask_register = StaticLengthArray(
-                map(getattr(operator, operation_code), operand1, operand2))
+                map(
+                    int,
+                    map(
+                        bool,
+                        map(
+                            getattr(operator, operation_code),
+                            operand1,
+                            operand2,
+                        ),
+                    ),
+                ))
 
         else:
             raise RuntimeError("Unknown vector mask register instruction:",
