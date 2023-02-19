@@ -470,10 +470,11 @@ class ALU:
         vrf = self.core.vector_register_file
 
         mode = functionality["vlr_mode"]
-        if mode == "T":
-            vrf.vector_length_register = srf[self.reg_index(
-                instruction["operand1"])]
-        elif mode == "F":
+        if mode == "T":  # MTCL
+            value = srf[self.reg_index(instruction["operand1"])]
+            assert 0 <= value <= vrf.vec_size, "illegal vector length"
+            vrf.vector_length_register = value
+        elif mode == "F":  # MFCL
             srf[self.reg_index(
                 instruction["operand1"])] = vrf.vector_length_register
         else:
