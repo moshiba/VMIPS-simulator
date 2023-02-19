@@ -456,8 +456,8 @@ class ALU:
             if mask_type == "V":
                 operand2 = vrf[self.reg_index(instruction["operand2"])]
             elif mask_type == "S":
-                operand2 = itertools.cycle(srf[self.reg_index(
-                    instruction["operand2"])])
+                operand2 = [srf[self.reg_index(instruction["operand2"])]
+                           ] * vrf.vec_size
 
             vrf.vector_mask_register = StaticLengthArray(
                 map(
