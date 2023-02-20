@@ -612,12 +612,16 @@ class TestSingleInstruction(BaseTestWithTempDir):
         for i in range(vec_size):
             vcore.vector_register_file.vector_mask_register[i] = i % 2
         self.assertTrue(0 in vcore.vector_register_file.vector_mask_register)
+        self.assertFalse(
+            all(
+                map(lambda x: x == 1,
+                    vcore.vector_register_file.vector_mask_register)))
         # Run CVM and confirm the results
         vcore.run()
         self.assertTrue(
             all(
-                filter(lambda x: x == 1,
-                       vcore.vector_register_file.vector_mask_register)))
+                map(lambda x: x == 1,
+                    vcore.vector_register_file.vector_mask_register)))
         gather_stats(vcore)
 
     @unittest.skip("TODO")
