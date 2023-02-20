@@ -54,19 +54,23 @@ class StaticLengthArray(collections.abc.Sequence):
 
     def __init__(self, iterable, *, container_type=list) -> None:
         self.__data = container_type(iterable)
-        self.size = len(self.__data)
+        self.__size = len(self.__data)
+
+    @property
+    def size(self):
+        return self.__size
 
     def __getitem__(self, index):
-        assert self.size == len(self.__data)
+        assert self.size == len(self.__data), f"{self.size}!={len(self.__data)}"
         return self.__data[index]
 
     def __len__(self):
-        assert self.size == len(self.__data)
+        assert self.size == len(self.__data), f"{self.size}!={len(self.__data)}"
         return len(self.__data)
 
     def __setitem__(self, index, value):
         # Provide this but not all other 'MutableSequence' methods
-        assert self.size == len(self.__data)
+        assert self.size == len(self.__data), f"{self.size}!={len(self.__data)}"
         self.__data[index] = value
 
     def __eq__(self, other):
@@ -102,7 +106,7 @@ class SignedInt32Array(StaticLengthArray):
         super().__init__(s32_array, container_type=lambda x: x)
 
     def __setitem__(self, index, value):
-        assert self.size == len(self)
+        assert self.size == len(self), f"{self.size}!={len(self)}"
         if isinstance(index, slice):
             value = array.array(self.type_code, value)  # type cast
         super().__setitem__(index, value)
