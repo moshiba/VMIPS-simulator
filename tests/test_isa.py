@@ -22,17 +22,25 @@ def tearDownModule():
     # Report what instructions are tested and what aren't
     instruction_container = InstructionMemory(load_path="tests/NoOp/Code.asm")
     instruction_container.load()
-    whole_instr = set(
+    every_instr = set(
         Core.decode(instr)["instruction"]
         for instr in instruction_container.instructions)
-    missing_instructions = whole_instr - instructions_used
+    global instructions_used
+    instructions_used = instructions_used - set(["ABRACADABRA"])
+
+    missing_instructions = every_instr - instructions_used
     print("-" * 80)
     print("INSTRUCTION TEST COVERAGE REPORT")
     print("-" * 80)
     print(f"{sorted(instructions_used) = }")
     print(f"{sorted(missing_instructions) = }")
     print("-" * 80)
-    print(f"coverage: {len(instructions_used)/len(whole_instr)*100:2.3}%")
+    count_used = len(instructions_used)
+    count_every = len(every_instr)
+    print("test coverage: "
+          f"{count_used}/{count_every}"
+          f" ({count_used/count_every*100:2.3}%)"
+          " instructions")
     print("-" * 80)
 
 
