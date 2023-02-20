@@ -416,13 +416,17 @@ class ALU:
         return int(register_token[2:]) - 1
 
     def vector_op(self, functionality, instruction):
+        # Aliases
         srf = self.core.scalar_register_file
         vrf = self.core.vector_register_file
 
-        operation_code = functionality["vector_op"].lower()
-        operation_code = "floordiv" if operation_code == "div" else operation_code
+        # Map operation name to standard operators
+        op_code = functionality["vector_op"].lower()
+        op_code = "floordiv" if op_code == "div" else op_code
         operand_type = functionality["vec_op_type"]
+        operation = getattr(operator, op_code)
 
+        # Get operands
         operand2 = vrf[self.reg_index(instruction["operand2"])]
         if operand_type == "V":
             operand3 = vrf[self.reg_index(instruction["operand3"])]
@@ -433,8 +437,14 @@ class ALU:
             raise RuntimeError("Unknown vector arithmetic instruction:",
                                instruction.groupdict())
 
-        vrf[self.reg_index(instruction["operand1"])] = list(
-            map(getattr(operator, operation_code), operand2, operand3))
+        # Do operation and store the result
+        result = list(map(operation, operand2, operand3))
+        for lane in range(vrf.vector_length_register):
+            # Handle vector length and vector mask effects
+            enable = vrf.vector_mask_register[lane]
+            if enable:
+                vrf[self.reg_index(
+                    instruction["operand1"])][lane] = result[lane]
 
     def vec_mask_reg(self, functionality, instruction):
         # TODO: test masked vector arithmetics
