@@ -1,4 +1,4 @@
-# VMIPS-functional-simulator
+# VMIPS-functional-simulator [![test](https://github.com/HsuanTingLu/VMIPS-functional-simulator/actions/workflows/test.yml/badge.svg)](https://github.com/HsuanTingLu/VMIPS-functional-simulator/actions/workflows/test.yml)
 
 ## Test
 
