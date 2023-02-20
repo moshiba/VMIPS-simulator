@@ -501,7 +501,6 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
         vcore.scalar_register_file[1] = 32
         vcore.run()
-        print(vcore.vector_register_file.vector_mask_register)
         self.assertEqual([0] * 31 + [1] + [0] * 32,
                          vcore.vector_register_file.vector_mask_register)
         gather_stats(vcore)
@@ -520,7 +519,6 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
         vcore.scalar_register_file[1] = 32
         vcore.run()
-        print(vcore.vector_register_file.vector_mask_register)
         self.assertEqual([1] * 31 + [0] + [1] * 32,
                          vcore.vector_register_file.vector_mask_register)
         gather_stats(vcore)
@@ -539,7 +537,6 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
         vcore.scalar_register_file[1] = 32
         vcore.run()
-        print(vcore.vector_register_file.vector_mask_register)
         self.assertEqual([0] * 31 + [0] + [1] * 32,
                          vcore.vector_register_file.vector_mask_register)
         gather_stats(vcore)
@@ -558,7 +555,6 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
         vcore.scalar_register_file[1] = 32
         vcore.run()
-        print(vcore.vector_register_file.vector_mask_register)
         self.assertEqual([1] * 31 + [0] + [0] * 32,
                          vcore.vector_register_file.vector_mask_register)
         gather_stats(vcore)
@@ -577,7 +573,6 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
         vcore.scalar_register_file[1] = 32
         vcore.run()
-        print(vcore.vector_register_file.vector_mask_register)
         self.assertEqual([0] * 31 + [1] + [1] * 32,
                          vcore.vector_register_file.vector_mask_register)
         gather_stats(vcore)
@@ -596,7 +591,6 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
         vcore.scalar_register_file[1] = 32
         vcore.run()
-        print(vcore.vector_register_file.vector_mask_register)
         self.assertEqual([1] * 31 + [1] + [0] * 32,
                          vcore.vector_register_file.vector_mask_register)
         gather_stats(vcore)
