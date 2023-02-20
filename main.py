@@ -614,18 +614,22 @@ class ALU:
         srf[self.reg_index(instruction["operand1"])] = operation(operator)
 
     def control(self, functionality, instruction):
-        condition = functionality["branch_condition"].lower()
-
+        # Aliases
         srf = self.core.scalar_register_file
+
+        # Get operands
         operand1 = srf[self.reg_index(instruction["operand1"])]
         operand2 = srf[self.reg_index(instruction["operand2"])]
         immediate = int(instruction["operand3"])
         assert immediate <= pow(2, 20), "immediate too large"
         assert -pow(2, 20) <= immediate, "immediate too small"
 
+        # Map operation name to standard operators
+        condition = functionality["branch_condition"].lower()
         operation = operator.methodcaller(condition, operand1, operand2)
         compare_result = operation(operator)
 
+        # Do operation
         if compare_result is True:
             # Branch taken
             self.core.PC += immediate - 1
