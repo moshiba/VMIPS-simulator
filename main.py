@@ -447,12 +447,15 @@ class ALU:
 
         # Do operation and store the result
         result = list(map(operation, operand2, operand3))
-        for lane in range(vrf.vector_length_register):
-            # Handle vector length and vector mask effects
-            enable = vrf.vector_mask_register[lane]
-            if enable:
-                vrf[self.reg_index(
-                    instruction["operand1"])][lane] = result[lane]
+        # Handle vector length and vector mask effects
+        original_values = vrf[self.reg_index(instruction["operand1"])]
+        masked_values = [
+            val if mask else orig for mask, orig, val in tuple(
+                zip(vrf.vector_mask_register, original_values, result))
+            [:vrf.vector_length_register]
+        ]
+        vrf[self.reg_index(instruction["operand1"]
+                          )][:vrf.vector_length_register] = masked_values
 
     def vec_mask_reg(self, functionality, instruction):
         # Aliases
