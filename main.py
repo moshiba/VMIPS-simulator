@@ -439,8 +439,8 @@ class ALU:
         if operand_type == "V":
             operand3 = vrf[self.reg_index(instruction["operand3"])]
         elif operand_type == "S":
-            operand3 = itertools.cycle(
-                [srf[self.reg_index(instruction["operand3"])]])
+            operand3 = itertools.repeat(
+                srf[self.reg_index(instruction["operand3"])], vrf.vec_size)
         else:
             raise RuntimeError("Unknown vector arithmetic instruction:",
                                instruction.groupdict())
