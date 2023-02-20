@@ -614,6 +614,7 @@ class ALU:
             pass
 
     def stop(self, functionality, instruction):
+        # Halt
         self.core.freeze = True
 
 
