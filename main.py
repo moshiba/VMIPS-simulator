@@ -451,21 +451,28 @@ class ALU:
                     instruction["operand1"])][lane] = result[lane]
 
     def vec_mask_reg(self, functionality, instruction):
-        # TODO: test masked vector arithmetics
+        # Aliases
         srf = self.core.scalar_register_file
         vrf = self.core.vector_register_file
 
+        # Acts differently according to instruction parsing results
         if functionality["clear_mask"]:  # CVM
-            vrf.vector_mask_register = StaticLengthArray([1] * vrf.vec_size)
+            # Use slice assignment instead of direct assignment
+            # in order to retain custom 'StaticLengthArray' type
+            vrf.vector_mask_register[:] = [1] * vrf.vec_size
+            assert isinstance(vrf.vector_mask_register, StaticLengthArray)
 
         elif functionality["count_mask"]:  # POP
             srf[self.reg_index(
                 instruction["operand1"])] = vrf.vector_mask_register.count(1)
 
-        elif (operation_code :=
-              functionality["mask_condition"]) and (mask_type :=
-                                                    functionality["mask_type"]):
-            operation_code = operation_code.lower()
+        elif (op_code := functionality["mask_condition"]) and (
+                mask_type := functionality["mask_type"]):  # S__VV and S__VS
+            # Map operation name to standard operators
+            op_code = op_code.lower()
+            operation = getattr(operator, op_code)
+
+            # Get operands
             operand1 = vrf[self.reg_index(instruction["operand1"])]
             if mask_type == "V":
                 operand2 = vrf[self.reg_index(instruction["operand2"])]
@@ -473,18 +480,13 @@ class ALU:
                 operand2 = [srf[self.reg_index(instruction["operand2"])]
                            ] * vrf.vec_size
 
-            vrf.vector_mask_register = StaticLengthArray(
-                map(
-                    int,
-                    map(
-                        bool,
-                        map(
-                            getattr(operator, operation_code),
-                            operand1,
-                            operand2,
-                        ),
-                    ),
-                ))
+            # Do operation and store the result
+            vrf.vector_mask_register[:] = map(
+                # Use slice assignment instead of direct assignment
+                # in order to retain custom 'StaticLengthArray' type
+                int,
+                map(bool, map(operation, operand1, operand2)))
+            assert isinstance(vrf.vector_mask_register, StaticLengthArray)
 
         else:
             raise RuntimeError("Unknown vector mask register instruction:",
