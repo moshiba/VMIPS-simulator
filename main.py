@@ -455,7 +455,7 @@ class ALU:
         srf = self.core.scalar_register_file
         vrf = self.core.vector_register_file
 
-        # Acts differently according to instruction parsing results
+        # Act differently according to instruction parsing results
         if functionality["clear_mask"]:  # CVM
             # Use slice assignment instead of direct assignment
             # in order to retain custom 'StaticLengthArray' type
@@ -497,7 +497,7 @@ class ALU:
         srf = self.core.scalar_register_file
         vrf = self.core.vector_register_file
 
-        # Acts differently according to instruction parsing results
+        # Act differently according to instruction parsing results
         mode = functionality["vlr_mode"]
         if mode == "T":  # MTCL
             value = srf[self.reg_index(instruction["operand1"])]
