@@ -588,23 +588,29 @@ class ALU:
                                instruction.groupdict())
 
     def scalar_op(self, functionality, instruction):
-        operation_code = functionality["scalar_op"].lower()
-        # slightly alter operation name to get the bitwise version
-        if operation_code in ("and", "or", "xor"):
-            operation_code += "_"
-        elif operation_code in ("sll", "sra"):
-            operation_code = f"{operation_code[1]}shift"
-
+        # Aliases
         srf = self.core.scalar_register_file
+
+        # Get operands
         operand2 = srf[self.reg_index(instruction["operand2"])]
         operand3 = srf[self.reg_index(instruction["operand3"])]
 
-        if operation_code == "srl":
-            # Python stores integers in large containers
-            # logical right shift needs special steps
+        # Map operation name to standard operators
+        op_code = functionality["scalar_op"].lower()
+        # Slightly alter operation name to get the bitwise version
+        if op_code in ("and", "or", "xor"):
+            op_code += "_"
+        elif op_code in ("sll", "sra"):
+            op_code = f"{op_code[1]}shift"
+        operation = operator.methodcaller(op_code, operand2, operand3)
+
+        # Do operation and store the result
+        # Python stores integers in large containers, so native >> behaves like
+        # arithmetic right shift, and it needs special steps to get signed-int32
+        # logical right shift behavior
+        if op_code == "srl":
             srf[self.reg_index(instruction["operand1"])] = operand2 >> operand3
             return
-        operation = operator.methodcaller(operation_code, operand2, operand3)
         srf[self.reg_index(instruction["operand1"])] = operation(operator)
 
     def control(self, functionality, instruction):
