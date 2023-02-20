@@ -669,13 +669,49 @@ class TestSingleInstruction(BaseTestWithTempDir):
         self.assertEqual(2 * vec_size // 3, vcore.SR2)
         gather_stats(vcore)
 
-    @unittest.skip("TODO")
     def test_9_MTCL(self):
-        pass  # @todo Test MTCL
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="MTCL SR1",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
 
-    @unittest.skip("TODO")
+        self.assertEqual(vcore.vector_register_file.vec_size,
+                         vcore.vector_register_file.vector_length_register)
+        random_number = 37
+        self.assertTrue(random_number <= vcore.vector_register_file.vec_size)
+        vcore.scalar_register_file[0] = random_number
+
+        vcore.run()
+        self.assertEqual(random_number,
+                         vcore.vector_register_file.vector_length_register)
+        gather_stats(vcore)
+
     def test_10_MFCL(self):
-        pass  # @todo Test MFCL
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="MFCL SR1",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+
+        random_number = 53
+        self.assertTrue(random_number <= vcore.vector_register_file.vec_size)
+        vcore.vector_register_file.vector_length_register = random_number
+        self.assertEqual(0, vcore.SR1)
+
+        vcore.run()
+        self.assertEqual(random_number, vcore.SR1)
+        gather_stats(vcore)
 
     @unittest.skip("TODO")
     def test_11_LV(self):
