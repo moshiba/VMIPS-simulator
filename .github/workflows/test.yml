@@ -1,4 +1,4 @@
-name: run unit tests
+name: test
 run-name: Running unit tests
 
 on:
@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/**"
       - "**/*.py"
+  workflow_dispatch:
 
 permissions:
   contents: read
