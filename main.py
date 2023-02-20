@@ -493,17 +493,21 @@ class ALU:
                                instruction.groupdict())
 
     def vec_len_reg(self, functionality, instruction):
+        # Aliases
         srf = self.core.scalar_register_file
         vrf = self.core.vector_register_file
 
+        # Acts differently according to instruction parsing results
         mode = functionality["vlr_mode"]
         if mode == "T":  # MTCL
             value = srf[self.reg_index(instruction["operand1"])]
             assert 0 <= value <= vrf.vec_size, "illegal vector length"
             vrf.vector_length_register = value
+
         elif mode == "F":  # MFCL
             srf[self.reg_index(
                 instruction["operand1"])] = vrf.vector_length_register
+
         else:
             raise RuntimeError("Unknown vector length register instruction:",
                                instruction.groupdict())
