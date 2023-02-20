@@ -624,9 +624,42 @@ class TestSingleInstruction(BaseTestWithTempDir):
                     vcore.vector_register_file.vector_mask_register)))
         gather_stats(vcore)
 
-    @unittest.skip("TODO")
     def test_8_POP(self):
-        pass  # @todo Test POP
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="POP SR1\nPOP SR2",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vec_size = vcore.vector_register_file.vec_size
+
+        # Case 1: half of the mask is 1
+        # Add zeros into half of the VMR and confirm the contents
+        for i in range(vec_size):
+            vcore.vector_register_file.vector_mask_register[i] = i % 2
+        self.assertEqual(
+            vec_size // 2,
+            vcore.vector_register_file.vector_mask_register.count(1))
+        # Run POP and confirm the results
+        vcore.step_instr()
+        self.assertEqual(vec_size // 2, vcore.SR1)
+
+        # Case 2: two thirds of the mask is 1
+        # Add zeros into two thirds of the VMR and confirm the contents
+        for i in range(vec_size):
+            vcore.vector_register_file.vector_mask_register[i] = int(bool(i %
+                                                                          3))
+        self.assertEqual(
+            2 * vec_size // 3,
+            vcore.vector_register_file.vector_mask_register.count(1))
+        # Run POP and confirm the results
+        vcore.step_instr()
+        self.assertEqual(2 * vec_size // 3, vcore.SR2)
+        gather_stats(vcore)
 
     @unittest.skip("TODO")
     def test_9_MTCL(self):
