@@ -485,11 +485,11 @@ class ALU:
                            ] * vrf.vec_size
 
             # Do operation and store the result
-            vrf.vector_mask_register[:] = map(
-                # Use slice assignment instead of direct assignment
-                # in order to retain custom 'StaticLengthArray' type
-                int,
-                map(bool, map(operation, operand1, operand2)))
+            # Use slice assignment instead of direct assignment
+            # in order to retain custom 'StaticLengthArray' type
+            vrf.vector_mask_register[:] = [
+                int(bool(value)) for value in map(operation, operand1, operand2)
+            ]
             assert isinstance(vrf.vector_mask_register, StaticLengthArray)
 
         else:
