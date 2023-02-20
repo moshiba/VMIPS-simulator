@@ -1,3 +1,5 @@
+"""VMIPS functional simulator
+"""
 import abc
 import argparse
 import array
@@ -12,7 +14,7 @@ import pathlib
 import re
 import typing
 
-DEBUG = os.environ.get("DEBUG", False)  # debug flag
+DEBUG = os.environ.get("DEBUG", False)  # verbose level flag
 
 
 def dprint(*args, debug_level: int = 1, **kwargs):
@@ -90,7 +92,10 @@ class SignedInt32Array(StaticLengthArray):
         elif array.array("l").itemsize == 4:
             self.type_code = "l"
         else:
-            # Failed to find a native type that represents 32-bit signed int
+            print(
+                "Warning: "
+                "Failed to find a native type that represents 32-bit signed int"
+                ", falling back to normal lists instead")
             super().__init__(iterable)
             return
         s32_array = array.array(self.type_code, iterable)
@@ -99,8 +104,7 @@ class SignedInt32Array(StaticLengthArray):
     def __setitem__(self, index, value):
         assert self.size == len(self)
         if isinstance(index, slice):
-            # cast value type
-            value = array.array(self.type_code, value)
+            value = array.array(self.type_code, value)  # type cast
         super().__setitem__(index, value)
 
     def __eq__(self, other):
