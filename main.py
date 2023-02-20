@@ -381,6 +381,9 @@ class InstructionMemory(FileMap):
 
 
 class ALU:
+    """The actual operation handler
+    Uses regular expression to parse instructions and extract operands
+    """
     # function_table
     _match_func_type_regex = re.compile(
         r"^"
