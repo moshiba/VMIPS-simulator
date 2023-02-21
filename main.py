@@ -612,9 +612,21 @@ class ALU:
         # arithmetic right shift, and it needs special steps to get signed-int32
         # logical right shift behavior
         if op_code == "srl":
-            srf[self.reg_index(instruction["operand1"])] = operand2 >> operand3
-            return
-        srf[self.reg_index(instruction["operand1"])] = operation(operator)
+            result = (operand2 & 0xFFFF_FFFF) >> operand3
+        else:
+            result = operation(operator)
+
+        print(f"{result & 0xFFFF_FFFF = :09_X}")
+        # handle OverflowError
+        if op_code == "lshift":
+            negative = result & (1 << 31)
+            if negative:
+                twos_complement = lambda x: (-1 if (x & (1 << 31)) else 1) * (((
+                    (x & 0xFFFF_FFFF) ^ 0xFFFF_FFFF) + 1) & 0xFFFF_FFFF)
+                result = twos_complement(result)
+            else:
+                result &= 0xFFFF_FFFF
+        srf[self.reg_index(instruction["operand1"])] = result
 
     def control(self, functionality, instruction):
         # Aliases

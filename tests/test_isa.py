@@ -869,17 +869,107 @@ class TestSingleInstruction(BaseTestWithTempDir):
 
         gather_stats(vcore)
 
-    @unittest.skip("TODO")
     def test_21_SLL(self):
-        pass  # @todo Test SLL
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="SLL SR1 SR2 SR3\nSLL SR4 SR5 SR6",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
 
-    @unittest.skip("TODO")
+        # test negative
+        vcore.scalar_register_file[1] = twos_complement(0xFF00_00FF)
+        vcore.scalar_register_file[2] = 4
+        print()
+        print(f"{vcore.SR2 & 0xFFFF_FFFF = :09_X}")
+        print(f"{vcore.SR3 & 0xFFFF_FFFF = :09_X}")
+        vcore.step_instr()
+        print(f"{vcore.SR1 & 0xFFFF_FFFF = :09_X}")
+        self.assertEqual(vcore.SR1, twos_complement(0xF000_0FF0))
+
+        # test positive
+        vcore.scalar_register_file[4] = 0x7F00_00FF
+        vcore.scalar_register_file[5] = 4
+        print()
+        print(f"{vcore.SR6 & 0xFFFF_FFFF = :09_X}")
+        print(f"{vcore.SR5 & 0xFFFF_FFFF = :09_X}")
+        vcore.step_instr()
+        print(f"{vcore.SR4 & 0xFFFF_FFFF = :09_X}")
+        self.assertEqual(vcore.SR4, twos_complement(0xF000_0FF0))
+
+        gather_stats(vcore)
+
     def test_21_SRL(self):
-        pass  # @todo Test SRL
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="SRL SR1 SR2 SR3\nSRL SR4 SR5 SR6",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
 
-    @unittest.skip("TODO")
+        # test negative
+        vcore.scalar_register_file[1] = twos_complement(0xFF00_00FF)
+        vcore.scalar_register_file[2] = 4
+        print()
+        print(f"{vcore.SR2 & 0xFFFF_FFFF = :09_X}")
+        print(f"{vcore.SR3 & 0xFFFF_FFFF = :09_X}")
+        vcore.step_instr()
+        print(f"{vcore.SR1 & 0xFFFF_FFFF = :09_X}")
+        self.assertEqual(vcore.SR1, 0x0FF0_000F)
+
+        # test positive
+        vcore.scalar_register_file[4] = 0x7F00_00FF
+        vcore.scalar_register_file[5] = 4
+        print()
+        print(f"{vcore.SR6 & 0xFFFF_FFFF = :09_X}")
+        print(f"{vcore.SR5 & 0xFFFF_FFFF = :09_X}")
+        vcore.step_instr()
+        print(f"{vcore.SR4 & 0xFFFF_FFFF = :09_X}")
+        self.assertEqual(vcore.SR4, 0x07F0_000F)
+
+        gather_stats(vcore)
+
     def test_22_SRA(self):
-        pass  # @todo Test SRA
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="SRA SR1 SR2 SR3\nSRA SR4 SR5 SR6",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+
+        # test negative
+        vcore.scalar_register_file[1] = twos_complement(0xFF00_00FF)
+        vcore.scalar_register_file[2] = 4
+        print()
+        print(f"{vcore.SR2 & 0xFFFF_FFFF = :09_X}")
+        print(f"{vcore.SR3 & 0xFFFF_FFFF = :09_X}")
+        vcore.step_instr()
+        print(f"{vcore.SR1 & 0xFFFF_FFFF = :09_X}")
+        self.assertEqual(vcore.SR1, twos_complement(0xFFF0_000F))
+
+        # test positive
+        vcore.scalar_register_file[4] = 0x7F00_00FF
+        vcore.scalar_register_file[5] = 4
+        print()
+        print(f"{vcore.SR6 & 0xFFFF_FFFF = :09_X}")
+        print(f"{vcore.SR5 & 0xFFFF_FFFF = :09_X}")
+        vcore.step_instr()
+        print(f"{vcore.SR4 & 0xFFFF_FFFF = :09_X}")
+        self.assertEqual(vcore.SR4, 0x07F0_000F)
+
+        gather_stats(vcore)
 
     def test_23_BEQ(self):
         instruction = self.current_instruction()
