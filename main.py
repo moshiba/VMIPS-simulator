@@ -601,7 +601,7 @@ class ALU:
         # Map operation name to standard operators
         op_code = functionality["scalar_op"].lower()
         # Slightly alter operation name to get the bitwise version
-        if op_code in ("and", "or", "xor"):
+        if op_code in ("and", "or"):  # xor stays the same
             op_code += "_"
         elif op_code in ("sll", "sra"):
             op_code = f"{op_code[1]}shift"

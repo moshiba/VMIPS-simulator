@@ -85,6 +85,17 @@ def get_core(in_dir: pathlib.Path, out_dir: pathlib.Path, file_prefix: str):
     return vcore
 
 
+def twos_complement(value: int) -> int:
+    sign = -1 if (value * 1 << 31) else 1
+    return sign * (((value ^ 0xFFFF_FFFF) + 1) & 0xFFFF_FFFF)
+
+
+max_int32 = 2147483647
+min_int32 = -2147483648
+assert twos_complement(0) == 0
+assert twos_complement(max_int32) == -((-max_int32) & 0xFFFF_FFFF)
+
+
 class TestSingleInstruction(BaseTestWithTempDir):
     """Test each instructions, one at a time
     """
@@ -753,17 +764,110 @@ class TestSingleInstruction(BaseTestWithTempDir):
     def test_19_SUB(self):
         pass  # @todo Test SUB
 
-    @unittest.skip("TODO")
     def test_20_AND(self):
-        pass  # @todo Test AND
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="AND SR1 SR2 SR3\nAND SR4 SR5 SR6",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
 
-    @unittest.skip("TODO")
+        max_int32 = 2147483647
+        min_int32 = -2147483648
+
+        # test negative
+        vcore.scalar_register_file[1] = twos_complement(0xF0F0_F0F0)
+        vcore.scalar_register_file[2] = twos_complement(0xFFFF_0000)
+        print()
+        print(f"{vcore.SR2 & 0xFFFF_FFFF = :09_X}")
+        print(f"{vcore.SR3 & 0xFFFF_FFFF = :09_X}")
+        vcore.step_instr()
+        print(f"{vcore.SR1 & 0xFFFF_FFFF = :09_X}")
+        self.assertEqual(vcore.SR1, twos_complement(0xF0F0_0000))
+
+        # test positive
+        vcore.scalar_register_file[4] = 0x0F0F_0F0F
+        vcore.scalar_register_file[5] = 0x0000_FFFF
+        print()
+        print(f"{vcore.SR5 & 0xFFFF_FFFF = :09_X}")
+        print(f"{vcore.SR6 & 0xFFFF_FFFF = :09_X}")
+        vcore.step_instr()
+        self.assertEqual(vcore.SR4, 0x0000_0F0F)
+        print(f"{vcore.SR4 & 0xFFFF_FFFF = :09_X}")
+
+        gather_stats(vcore)
+
     def test_20_OR(self):
-        pass  # @todo Test OR
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="OR SR1 SR2 SR3\nOR SR4 SR5 SR6",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
 
-    @unittest.skip("TODO")
+        # test negative
+        vcore.scalar_register_file[1] = twos_complement(0xF0F0_F0F0)
+        vcore.scalar_register_file[2] = twos_complement(0xFF00_0F0F)
+        print()
+        print(f"{vcore.SR2 & 0xFFFF_FFFF = :09_X}")
+        print(f"{vcore.SR3 & 0xFFFF_FFFF = :09_X}")
+        vcore.step_instr()
+        print(f"{vcore.SR1 & 0xFFFF_FFFF = :09_X}")
+        self.assertEqual(vcore.SR1, twos_complement(0xFFF0_FFFF))
+
+        # test positive
+        vcore.scalar_register_file[4] = 0x0F0F_0F0F
+        vcore.scalar_register_file[5] = 0x00FF_F0F0
+        print()
+        print(f"{vcore.SR5 & 0xFFFF_FFFF = :09_X}")
+        print(f"{vcore.SR6 & 0xFFFF_FFFF = :09_X}")
+        vcore.step_instr()
+        print(f"{vcore.SR4 & 0xFFFF_FFFF = :09_X}")
+        self.assertEqual(vcore.SR4, 0x0FFF_FFFF)
+
+        gather_stats(vcore)
+
     def test_20_XOR(self):
-        pass  # @todo Test XOR
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code="XOR SR1 SR2 SR3\nXOR SR4 SR5 SR6",
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+
+        # test negative
+        vcore.scalar_register_file[1] = min_int32
+        vcore.scalar_register_file[2] = twos_complement(0xFFFF_FFFF)
+        print()
+        print(f"{vcore.SR2 & 0xFFFF_FFFF = :032b}")
+        print(f"{vcore.SR3 & 0xFFFF_FFFF = :032b}")
+        vcore.step_instr()
+        print(f"{vcore.SR1 & 0xFFFF_FFFF = :032b}")
+        self.assertEqual(vcore.SR1, max_int32)
+
+        # test positive
+        vcore.scalar_register_file[4] = max_int32
+        vcore.scalar_register_file[5] = twos_complement(0xFFFF_FFFF)
+        print()
+        print(f"{vcore.SR5 & 0xFFFF_FFFF = :032b}")
+        print(f"{vcore.SR6 & 0xFFFF_FFFF = :032b}")
+        vcore.step_instr()
+        print(f"{vcore.SR4 & 0xFFFF_FFFF = :032b}")
+        self.assertEqual(vcore.SR4, min_int32)
+
+        gather_stats(vcore)
 
     @unittest.skip("TODO")
     def test_21_SLL(self):
