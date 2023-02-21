@@ -40,7 +40,7 @@ def tearDownModule():
     count_every = len(every_instr)
     print("test coverage: "
           f"{count_used}/{count_every}"
-          f" ({count_used/count_every*100:2.3}%)"
+          f" ({count_used/count_every*100:.2f}%)"
           " instructions")
     print("-" * 80)
 
