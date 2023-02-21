@@ -555,7 +555,7 @@ class ALU:
                 stride = srf[self.reg_index(
                     instruction["operand3"])] if strided else 1
                 offsets = list(range(0, vrf.vec_size * stride, stride))
-            elif mem_type == "I":  # gather/scatter
+            elif mem_type == "VI":  # gather/scatter
                 offsets = vrf[self.reg_index(instruction["operand3"])]
             else:
                 raise NotImplementedError

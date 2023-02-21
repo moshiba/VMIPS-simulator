@@ -1,6 +1,7 @@
 """Test instruction functionalities
 """
 import inspect
+import itertools
 import pathlib
 import re
 import unittest
@@ -119,11 +120,11 @@ class TestSingleInstruction(BaseTestWithTempDir):
         code_file.flush()
 
         scalar_mem_file = (tempdir / f"{file_prefix}_SDMEM.txt").open(mode="w")
-        scalar_mem_file.writelines([str(i) for i in scalar_mem])
+        scalar_mem_file.writelines("\n".join([str(i) for i in scalar_mem]))
         scalar_mem_file.flush()
 
         vector_mem_file = (tempdir / f"{file_prefix}_VDMEM.txt").open(mode="w")
-        vector_mem_file.writelines([str(i) for i in vector_mem])
+        vector_mem_file.writelines("\n".join([str(i) for i in vector_mem]))
         vector_mem_file.flush()
 
         return code_file, scalar_mem_file, vector_mem_file
@@ -732,21 +733,90 @@ class TestSingleInstruction(BaseTestWithTempDir):
     def test_12_SV(self):
         pass  # @todo Test SV
 
-    @unittest.skip("TODO")
     def test_13_LVWS(self):
-        pass  # @todo Test LVWS
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("LVWS VR1 SR2 SR3"),
+            scalar_mem=[0],
+            vector_mem=[0] + list(
+                itertools.chain.from_iterable(
+                    [(i, 0, 0) for i in range(0 + 1, 64 * 2 + 1, 2)]))[:-2],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[1] = 1  # base addr
+        vcore.scalar_register_file[2] = 3  # stride
+        vcore.run()
+        self.assertEqual(list(range(0 + 1, 64 * 2 + 1, 2)), vcore.VR1)
+        gather_stats(vcore)
 
-    @unittest.skip("TODO")
     def test_14_SVWS(self):
-        pass  # @todo Test SVWS
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("SVWS VR1 SR2 SR3"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:] = list(range(0 + 1, 64 * 2 + 1, 2))
+        vcore.scalar_register_file[1] = 2  # base addr
+        vcore.scalar_register_file[2] = 3  # stride
+        vcore.run()
+        self.assertEqual([0, 0] + list(
+            itertools.chain.from_iterable([
+                (i, 0, 0) for i in range(0 + 1, 64 * 2 + 1, 2)
+            ]))[:-2], vcore.vector_data_mem[:64 * 3])
+        gather_stats(vcore)
 
-    @unittest.skip("TODO")
     def test_15_LVI(self):
-        pass  # @todo Test LVI
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("LVI VR1 SR2 VR3"),
+            scalar_mem=[0],
+            vector_mem=list(
+                itertools.chain.from_iterable([
+                    ([i] + [0] * i) for i in range(0 + 1, 64 * 2 + 1, 2)
+                ]))[:-127],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.scalar_register_file[1] = 0  # base addr
+        vcore.vector_register_file[2][:] = list(
+            itertools.accumulate([2 * i for i in range(64)]))
+        vcore.run()
+        self.assertEqual(list(range(0 + 1, 64 * 2 + 1, 2)), list(vcore.VR1))
+        gather_stats(vcore)
 
-    @unittest.skip("TODO")
     def test_16_SVI(self):
-        pass  # @todo Test SVI
+        instruction = self.current_instruction()
+        code, scalar_mem, vector_mem = self.generate(
+            self.temp_dir,
+            instruction,
+            code=("SVI VR1 SR2 VR3"),
+            scalar_mem=[0],
+            vector_mem=[0],
+        )
+        vcore = get_core(self.temp_dir, self.temp_dir,
+                         f"single_instr_test_{instruction}")
+        vcore.vector_register_file[0][:] = list(range(0 + 1, 64 * 2 + 1, 2))
+        vcore.scalar_register_file[1] = 0  # base addr
+        vcore.vector_register_file[2][:] = list(
+            itertools.accumulate([2 * i for i in range(64)]))
+        vcore.run()
+        self.assertEqual(
+            list(
+                itertools.chain.from_iterable([
+                    ([i] + [0] * i) for i in range(0 + 1, 64 * 2 + 1, 2)
+                ]))[:-127], vcore.vector_data_mem[:list(
+                    itertools.accumulate([2 * i for i in range(64)]))[-1] + 1])
+        gather_stats(vcore)
 
     @unittest.skip("TODO")
     def test_17_LS(self):
