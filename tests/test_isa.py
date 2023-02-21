@@ -86,14 +86,14 @@ def get_core(in_dir: pathlib.Path, out_dir: pathlib.Path, file_prefix: str):
 
 
 def twos_complement(value: int) -> int:
-    sign = -1 if (value * 1 << 31) else 1
+    sign = -1 if (value & (1 << 31)) else 1
     return sign * (((value ^ 0xFFFF_FFFF) + 1) & 0xFFFF_FFFF)
 
 
 max_int32 = 2147483647
 min_int32 = -2147483648
 assert twos_complement(0) == 0
-assert twos_complement(max_int32) == -((-max_int32) & 0xFFFF_FFFF)
+assert twos_complement(0xFFFF_FFFF) == -1
 
 
 class TestSingleInstruction(BaseTestWithTempDir):
