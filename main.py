@@ -621,8 +621,14 @@ class ALU:
         if op_code == "lshift":
             negative = result & (1 << 31)
             if negative:
-                twos_complement = lambda x: (-1 if (x & (1 << 31)) else 1) * (((
-                    (x & 0xFFFF_FFFF) ^ 0xFFFF_FFFF) + 1) & 0xFFFF_FFFF)
+
+                def twos_complement(x):
+                    sign = -1 if (x & (1 << 31)) else 1
+                    # Python needs the sign even if the underlying container is
+                    # designated as signed 32-bit integers
+                    return sign * (((
+                        (x & 0xFFFF_FFFF) ^ 0xFFFF_FFFF) + 1) & 0xFFFF_FFFF)
+
                 result = twos_complement(result)
             else:
                 result &= 0xFFFF_FFFF
