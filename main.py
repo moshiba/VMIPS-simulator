@@ -187,7 +187,7 @@ class RegisterFile(FileMap):
         meddling with internal variables.
         """
         dprint(color("blue")(f"{self.type}reg read "),
-               f"R{index+1}",
+               f"R{index}",
                end="",
                debug_level=2)
         assert 0 <= index, "index too small"
@@ -208,7 +208,7 @@ class RegisterFile(FileMap):
         meddling with internal variables.
         """
         dprint(color("red")(f"{self.type}reg write"),
-               f"R{index+1} = {value}",
+               f"R{index} = {value}",
                debug_level=2)
         assert 0 <= index, "index too small"
 
@@ -421,10 +421,11 @@ class ALU:
 
     @classmethod
     def reg_index(cls, register_token):
+        # FIXME: remove legacy index translation
         """Helper method to extract register index from assembly
         for example: SR2->1
         """
-        return int(register_token[2:]) - 1
+        return int(register_token[2:]) - 0
 
     def vector_op(self, functionality, instruction):
         # Aliases
@@ -714,9 +715,7 @@ class Core:
                 "_"
                 f"{dict(R='register_file',M='data_mem')[mem_type]}")
 
-            # Designate registers by index starting from 1
-            # and memory cells starting from 0
-            return cell[int(reg_idx) - int(mem_type == "R")]
+            return cell[int(reg_idx)]
         else:
             return self.__getattribute__(name)
 

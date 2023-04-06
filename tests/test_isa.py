@@ -141,8 +141,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
 
-        vcore.vector_register_file[0] = list(range(64))
-        vcore.vector_register_file[1] = list(reversed(range(64)))
+        vcore.vector_register_file[1] = list(range(64))
+        vcore.vector_register_file[2] = list(reversed(range(64)))
         vcore.run()
         self.assertEqual([63] * 64, vcore.VR3)
         gather_stats(vcore)
@@ -159,8 +159,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
 
-        vcore.vector_register_file[0] = list(range(0, 64))
-        vcore.vector_register_file[1] = list(range(1, 65))
+        vcore.vector_register_file[1] = list(range(0, 64))
+        vcore.vector_register_file[2] = list(range(1, 65))
         vcore.run()
         self.assertEqual([-1] * 64, vcore.VR3)
         gather_stats(vcore)
@@ -177,8 +177,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
 
-        vcore.vector_register_file[0] = list(range(3, 67))
-        vcore.scalar_register_file[1] = -2
+        vcore.vector_register_file[1] = list(range(3, 67))
+        vcore.scalar_register_file[2] = -2
         vcore.run()
         self.assertEqual(list(range(1, 65)), vcore.VR3)
         gather_stats(vcore)
@@ -195,8 +195,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
 
-        vcore.vector_register_file[0] = list(range(0, 64))
-        vcore.scalar_register_file[1] = 63
+        vcore.vector_register_file[1] = list(range(0, 64))
+        vcore.scalar_register_file[2] = 63
         vcore.run()
         self.assertEqual(list(range(-63, 1)), vcore.VR3)
         gather_stats(vcore)
@@ -213,8 +213,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
 
-        vcore.vector_register_file[0] = list(range(64))
         vcore.vector_register_file[1] = list(range(64))
+        vcore.vector_register_file[2] = list(range(64))
         vcore.run()
         self.assertEqual([i * i for i in range(64)], vcore.VR3)
         gather_stats(vcore)
@@ -231,8 +231,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
 
-        vcore.vector_register_file[0] = [i * i for i in range(1, 65)]
-        vcore.vector_register_file[1] = list(range(1, 65))
+        vcore.vector_register_file[1] = [i * i for i in range(1, 65)]
+        vcore.vector_register_file[2] = list(range(1, 65))
         vcore.run()
         self.assertEqual(list(range(1, 65)), vcore.VR3)
         gather_stats(vcore)
@@ -249,8 +249,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
 
-        vcore.vector_register_file[0] = list(range(64))
-        vcore.scalar_register_file[1] = 2
+        vcore.vector_register_file[1] = list(range(64))
+        vcore.scalar_register_file[2] = 2
         vcore.run()
         self.assertEqual([i * 2 for i in range(64)], vcore.VR3)
         gather_stats(vcore)
@@ -267,8 +267,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
 
-        vcore.vector_register_file[0] = [i for i in range(64)]
-        vcore.scalar_register_file[1] = 2
+        vcore.vector_register_file[1] = [i for i in range(64)]
+        vcore.scalar_register_file[2] = 2
         vcore.run()
         self.assertEqual([i // 2 for i in range(64)], vcore.VR3)
         gather_stats(vcore)
@@ -285,8 +285,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 1: VR1-0to7 > VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(1, 9))  # (1)~(8)
-        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[2][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
         vcore.run()
         self.assertEqual([0] * 8 + [1] * 56,
                          vcore.vector_register_file.vector_mask_register)
@@ -295,8 +295,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 2: VR1-0to7 = VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(-4, 4))  # (-4)~(3)
         vcore.vector_register_file[1][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.vector_register_file[2][:8] = list(range(-4, 4))  # (-4)~(3)
         vcore.run()
         self.assertEqual([1] * 64,
                          vcore.vector_register_file.vector_mask_register)
@@ -305,8 +305,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 3: VR1-0to7 < VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
-        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[2][:8] = list(range(1, 9))  # (1)~(8)
         vcore.run()
         self.assertEqual([0] * 8 + [1] * 56,
                          vcore.vector_register_file.vector_mask_register)
@@ -324,8 +324,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 1: VR1-0to7 > VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(1, 9))  # (1)~(8)
-        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[2][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
         vcore.run()
         self.assertEqual([1] * 8 + [0] * 56,
                          vcore.vector_register_file.vector_mask_register)
@@ -334,8 +334,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 2: VR1-0to7 = VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(-4, 4))  # (-4)~(3)
         vcore.vector_register_file[1][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.vector_register_file[2][:8] = list(range(-4, 4))  # (-4)~(3)
         vcore.run()
         self.assertEqual([0] * 64,
                          vcore.vector_register_file.vector_mask_register)
@@ -344,8 +344,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 3: VR1-0to7 < VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
-        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[2][:8] = list(range(1, 9))  # (1)~(8)
         vcore.run()
         self.assertEqual([1] * 8 + [0] * 56,
                          vcore.vector_register_file.vector_mask_register)
@@ -363,8 +363,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 1: VR1-0to7 > VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(1, 9))  # (1)~(8)
-        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[2][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
         vcore.run()
         self.assertEqual([1] * 8 + [0] * 56,
                          vcore.vector_register_file.vector_mask_register)
@@ -373,8 +373,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 2: VR1-0to7 = VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(-4, 4))  # (-4)~(3)
         vcore.vector_register_file[1][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.vector_register_file[2][:8] = list(range(-4, 4))  # (-4)~(3)
         vcore.run()
         self.assertEqual([0] * 64,
                          vcore.vector_register_file.vector_mask_register)
@@ -383,8 +383,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 3: VR1-0to7 < VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
-        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[2][:8] = list(range(1, 9))  # (1)~(8)
         vcore.run()
         self.assertEqual([0] * 64,
                          vcore.vector_register_file.vector_mask_register)
@@ -402,8 +402,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 1: VR1-0to7 > VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(1, 9))  # (1)~(8)
-        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[2][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
         vcore.run()
         self.assertEqual([0] * 64,
                          vcore.vector_register_file.vector_mask_register)
@@ -412,8 +412,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 2: VR1-0to7 = VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(-4, 4))  # (-4)~(3)
         vcore.vector_register_file[1][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.vector_register_file[2][:8] = list(range(-4, 4))  # (-4)~(3)
         vcore.run()
         self.assertEqual([0] * 64,
                          vcore.vector_register_file.vector_mask_register)
@@ -422,8 +422,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 3: VR1-0to7 < VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
-        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[2][:8] = list(range(1, 9))  # (1)~(8)
         vcore.run()
         self.assertEqual([1] * 8 + [0] * 56,
                          vcore.vector_register_file.vector_mask_register)
@@ -441,8 +441,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 1: VR1-0to7 > VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(1, 9))  # (1)~(8)
-        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[2][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
         vcore.run()
         self.assertEqual([1] * 64,
                          vcore.vector_register_file.vector_mask_register)
@@ -451,8 +451,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 2: VR1-0to7 = VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(-4, 4))  # (-4)~(3)
         vcore.vector_register_file[1][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.vector_register_file[2][:8] = list(range(-4, 4))  # (-4)~(3)
         vcore.run()
         self.assertEqual([1] * 64,
                          vcore.vector_register_file.vector_mask_register)
@@ -461,8 +461,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 3: VR1-0to7 < VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
-        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[2][:8] = list(range(1, 9))  # (1)~(8)
         vcore.run()
         self.assertEqual([0] * 8 + [1] * 56,
                          vcore.vector_register_file.vector_mask_register)
@@ -480,8 +480,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 1: VR1-0to7 > VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(1, 9))  # (1)~(8)
-        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[2][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
         vcore.run()
         self.assertEqual([0] * 8 + [1] * 56,
                          vcore.vector_register_file.vector_mask_register)
@@ -490,8 +490,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 2: VR1-0to7 = VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(-4, 4))  # (-4)~(3)
         vcore.vector_register_file[1][:8] = list(range(-4, 4))  # (-4)~(3)
+        vcore.vector_register_file[2][:8] = list(range(-4, 4))  # (-4)~(3)
         vcore.run()
         self.assertEqual([1] * 64,
                          vcore.vector_register_file.vector_mask_register)
@@ -500,8 +500,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 3: VR1-0to7 < VR2-0to7
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
-        vcore.vector_register_file[1][:8] = list(range(1, 9))  # (1)~(8)
+        vcore.vector_register_file[1][:8] = list(range(-1, -9, -1))  # (-1)~(-8)
+        vcore.vector_register_file[2][:8] = list(range(1, 9))  # (1)~(8)
         vcore.run()
         self.assertEqual([1] * 64,
                          vcore.vector_register_file.vector_mask_register)
@@ -518,8 +518,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         )
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
-        vcore.scalar_register_file[1] = 32
+        vcore.vector_register_file[1][:] = list(range(1, 65))  # (1)~(64)
+        vcore.scalar_register_file[2] = 32
         vcore.run()
         self.assertEqual([0] * 31 + [1] + [0] * 32,
                          vcore.vector_register_file.vector_mask_register)
@@ -536,8 +536,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         )
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
-        vcore.scalar_register_file[1] = 32
+        vcore.vector_register_file[1][:] = list(range(1, 65))  # (1)~(64)
+        vcore.scalar_register_file[2] = 32
         vcore.run()
         self.assertEqual([1] * 31 + [0] + [1] * 32,
                          vcore.vector_register_file.vector_mask_register)
@@ -554,8 +554,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         )
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
-        vcore.scalar_register_file[1] = 32
+        vcore.vector_register_file[1][:] = list(range(1, 65))  # (1)~(64)
+        vcore.scalar_register_file[2] = 32
         vcore.run()
         self.assertEqual([0] * 31 + [0] + [1] * 32,
                          vcore.vector_register_file.vector_mask_register)
@@ -572,8 +572,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         )
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
-        vcore.scalar_register_file[1] = 32
+        vcore.vector_register_file[1][:] = list(range(1, 65))  # (1)~(64)
+        vcore.scalar_register_file[2] = 32
         vcore.run()
         self.assertEqual([1] * 31 + [0] + [0] * 32,
                          vcore.vector_register_file.vector_mask_register)
@@ -590,8 +590,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         )
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
-        vcore.scalar_register_file[1] = 32
+        vcore.vector_register_file[1][:] = list(range(1, 65))  # (1)~(64)
+        vcore.scalar_register_file[2] = 32
         vcore.run()
         self.assertEqual([0] * 31 + [1] + [1] * 32,
                          vcore.vector_register_file.vector_mask_register)
@@ -608,8 +608,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         )
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:] = list(range(1, 65))  # (1)~(64)
-        vcore.scalar_register_file[1] = 32
+        vcore.vector_register_file[1][:] = list(range(1, 65))  # (1)~(64)
+        vcore.scalar_register_file[2] = 32
         vcore.run()
         self.assertEqual([1] * 31 + [1] + [0] * 32,
                          vcore.vector_register_file.vector_mask_register)
@@ -697,7 +697,7 @@ class TestSingleInstruction(BaseTestWithTempDir):
                          vcore.vector_register_file.vector_length_register)
         random_number = 37
         self.assertTrue(random_number <= vcore.vector_register_file.vec_size)
-        vcore.scalar_register_file[0] = random_number
+        vcore.scalar_register_file[1] = random_number
 
         vcore.run()
         self.assertEqual(random_number,
@@ -746,8 +746,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         )
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[1] = 1  # base addr
-        vcore.scalar_register_file[2] = 3  # stride
+        vcore.scalar_register_file[2] = 1  # base addr
+        vcore.scalar_register_file[3] = 3  # stride
         vcore.run()
         self.assertEqual(list(range(0 + 1, 64 * 2 + 1, 2)), vcore.VR1)
         gather_stats(vcore)
@@ -763,9 +763,9 @@ class TestSingleInstruction(BaseTestWithTempDir):
         )
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:] = list(range(0 + 1, 64 * 2 + 1, 2))
-        vcore.scalar_register_file[1] = 2  # base addr
-        vcore.scalar_register_file[2] = 3  # stride
+        vcore.vector_register_file[1][:] = list(range(0 + 1, 64 * 2 + 1, 2))
+        vcore.scalar_register_file[2] = 2  # base addr
+        vcore.scalar_register_file[3] = 3  # stride
         vcore.run()
         self.assertEqual([0, 0] + list(
             itertools.chain.from_iterable([
@@ -787,8 +787,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         )
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[1] = 0  # base addr
-        vcore.vector_register_file[2][:] = list(
+        vcore.scalar_register_file[2] = 0  # base addr
+        vcore.vector_register_file[3][:] = list(
             itertools.accumulate([2 * i for i in range(64)]))
         vcore.run()
         self.assertEqual(list(range(0 + 1, 64 * 2 + 1, 2)), list(vcore.VR1))
@@ -805,9 +805,9 @@ class TestSingleInstruction(BaseTestWithTempDir):
         )
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.vector_register_file[0][:] = list(range(0 + 1, 64 * 2 + 1, 2))
-        vcore.scalar_register_file[1] = 0  # base addr
-        vcore.vector_register_file[2][:] = list(
+        vcore.vector_register_file[1][:] = list(range(0 + 1, 64 * 2 + 1, 2))
+        vcore.scalar_register_file[2] = 0  # base addr
+        vcore.vector_register_file[3][:] = list(
             itertools.accumulate([2 * i for i in range(64)]))
         vcore.run()
         self.assertEqual(
@@ -850,8 +850,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         min_int32 = -2147483648
 
         # test negative
-        vcore.scalar_register_file[1] = twos_complement(0xF0F0_F0F0)
-        vcore.scalar_register_file[2] = twos_complement(0xFFFF_0000)
+        vcore.scalar_register_file[2] = twos_complement(0xF0F0_F0F0)
+        vcore.scalar_register_file[3] = twos_complement(0xFFFF_0000)
         print()
         print(f"{vcore.SR2 & 0xFFFF_FFFF = :09_X}")
         print(f"{vcore.SR3 & 0xFFFF_FFFF = :09_X}")
@@ -860,8 +860,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         self.assertEqual(vcore.SR1, twos_complement(0xF0F0_0000))
 
         # test positive
-        vcore.scalar_register_file[4] = 0x0F0F_0F0F
-        vcore.scalar_register_file[5] = 0x0000_FFFF
+        vcore.scalar_register_file[5] = 0x0F0F_0F0F
+        vcore.scalar_register_file[6] = 0x0000_FFFF
         print()
         print(f"{vcore.SR5 & 0xFFFF_FFFF = :09_X}")
         print(f"{vcore.SR6 & 0xFFFF_FFFF = :09_X}")
@@ -884,8 +884,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
                          f"single_instr_test_{instruction}")
 
         # test negative
-        vcore.scalar_register_file[1] = twos_complement(0xF0F0_F0F0)
-        vcore.scalar_register_file[2] = twos_complement(0xFF00_0F0F)
+        vcore.scalar_register_file[2] = twos_complement(0xF0F0_F0F0)
+        vcore.scalar_register_file[3] = twos_complement(0xFF00_0F0F)
         print()
         print(f"{vcore.SR2 & 0xFFFF_FFFF = :09_X}")
         print(f"{vcore.SR3 & 0xFFFF_FFFF = :09_X}")
@@ -894,8 +894,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         self.assertEqual(vcore.SR1, twos_complement(0xFFF0_FFFF))
 
         # test positive
-        vcore.scalar_register_file[4] = 0x0F0F_0F0F
-        vcore.scalar_register_file[5] = 0x00FF_F0F0
+        vcore.scalar_register_file[5] = 0x0F0F_0F0F
+        vcore.scalar_register_file[6] = 0x00FF_F0F0
         print()
         print(f"{vcore.SR5 & 0xFFFF_FFFF = :09_X}")
         print(f"{vcore.SR6 & 0xFFFF_FFFF = :09_X}")
@@ -918,8 +918,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
                          f"single_instr_test_{instruction}")
 
         # test negative
-        vcore.scalar_register_file[1] = min_int32
-        vcore.scalar_register_file[2] = twos_complement(0xFFFF_FFFF)
+        vcore.scalar_register_file[2] = min_int32
+        vcore.scalar_register_file[3] = twos_complement(0xFFFF_FFFF)
         print()
         print(f"{vcore.SR2 & 0xFFFF_FFFF = :032b}")
         print(f"{vcore.SR3 & 0xFFFF_FFFF = :032b}")
@@ -928,8 +928,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         self.assertEqual(vcore.SR1, max_int32)
 
         # test positive
-        vcore.scalar_register_file[4] = max_int32
-        vcore.scalar_register_file[5] = twos_complement(0xFFFF_FFFF)
+        vcore.scalar_register_file[5] = max_int32
+        vcore.scalar_register_file[6] = twos_complement(0xFFFF_FFFF)
         print()
         print(f"{vcore.SR5 & 0xFFFF_FFFF = :032b}")
         print(f"{vcore.SR6 & 0xFFFF_FFFF = :032b}")
@@ -952,8 +952,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
                          f"single_instr_test_{instruction}")
 
         # test negative
-        vcore.scalar_register_file[1] = twos_complement(0xFF00_00FF)
-        vcore.scalar_register_file[2] = 4
+        vcore.scalar_register_file[2] = twos_complement(0xFF00_00FF)
+        vcore.scalar_register_file[3] = 4
         print()
         print(f"{vcore.SR2 & 0xFFFF_FFFF = :09_X}")
         print(f"{vcore.SR3 & 0xFFFF_FFFF = :09_X}")
@@ -962,8 +962,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         self.assertEqual(vcore.SR1, twos_complement(0xF000_0FF0))
 
         # test positive
-        vcore.scalar_register_file[4] = 0x7F00_00FF
-        vcore.scalar_register_file[5] = 4
+        vcore.scalar_register_file[5] = 0x7F00_00FF
+        vcore.scalar_register_file[6] = 4
         print()
         print(f"{vcore.SR6 & 0xFFFF_FFFF = :09_X}")
         print(f"{vcore.SR5 & 0xFFFF_FFFF = :09_X}")
@@ -986,8 +986,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
                          f"single_instr_test_{instruction}")
 
         # test negative
-        vcore.scalar_register_file[1] = twos_complement(0xFF00_00FF)
-        vcore.scalar_register_file[2] = 4
+        vcore.scalar_register_file[2] = twos_complement(0xFF00_00FF)
+        vcore.scalar_register_file[3] = 4
         print()
         print(f"{vcore.SR2 & 0xFFFF_FFFF = :09_X}")
         print(f"{vcore.SR3 & 0xFFFF_FFFF = :09_X}")
@@ -996,8 +996,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         self.assertEqual(vcore.SR1, 0x0FF0_000F)
 
         # test positive
-        vcore.scalar_register_file[4] = 0x7F00_00FF
-        vcore.scalar_register_file[5] = 4
+        vcore.scalar_register_file[5] = 0x7F00_00FF
+        vcore.scalar_register_file[6] = 4
         print()
         print(f"{vcore.SR6 & 0xFFFF_FFFF = :09_X}")
         print(f"{vcore.SR5 & 0xFFFF_FFFF = :09_X}")
@@ -1020,8 +1020,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
                          f"single_instr_test_{instruction}")
 
         # test negative
-        vcore.scalar_register_file[1] = twos_complement(0xFF00_00FF)
-        vcore.scalar_register_file[2] = 4
+        vcore.scalar_register_file[2] = twos_complement(0xFF00_00FF)
+        vcore.scalar_register_file[3] = 4
         print()
         print(f"{vcore.SR2 & 0xFFFF_FFFF = :09_X}")
         print(f"{vcore.SR3 & 0xFFFF_FFFF = :09_X}")
@@ -1030,8 +1030,8 @@ class TestSingleInstruction(BaseTestWithTempDir):
         self.assertEqual(vcore.SR1, twos_complement(0xFFF0_000F))
 
         # test positive
-        vcore.scalar_register_file[4] = 0x7F00_00FF
-        vcore.scalar_register_file[5] = 4
+        vcore.scalar_register_file[5] = 0x7F00_00FF
+        vcore.scalar_register_file[6] = 4
         print()
         print(f"{vcore.SR6 & 0xFFFF_FFFF = :09_X}")
         print(f"{vcore.SR5 & 0xFFFF_FFFF = :09_X}")
@@ -1057,23 +1057,23 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 1: SR1 > SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 3
-        vcore.scalar_register_file[1] = 1
+        vcore.scalar_register_file[1] = 3
+        vcore.scalar_register_file[2] = 1
         with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
             vcore.run()
         gather_stats(vcore)
         # case 2: SR1 = SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 2
         vcore.scalar_register_file[1] = 2
+        vcore.scalar_register_file[2] = 2
         vcore.run()  # asserts that no exception is raised
         gather_stats(vcore)
         # case 3: SR1 < SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 1
-        vcore.scalar_register_file[1] = 3
+        vcore.scalar_register_file[1] = 1
+        vcore.scalar_register_file[2] = 3
         with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
             vcore.run()
         gather_stats(vcore)
@@ -1094,23 +1094,23 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 1: SR1 > SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 3
-        vcore.scalar_register_file[1] = 1
+        vcore.scalar_register_file[1] = 3
+        vcore.scalar_register_file[2] = 1
         vcore.run()  # asserts that no exception is raised
         gather_stats(vcore)
         # case 2: SR1 = SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 2
         vcore.scalar_register_file[1] = 2
+        vcore.scalar_register_file[2] = 2
         with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
             vcore.run()
         gather_stats(vcore)
         # case 3: SR1 < SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 1
-        vcore.scalar_register_file[1] = 3
+        vcore.scalar_register_file[1] = 1
+        vcore.scalar_register_file[2] = 3
         vcore.run()  # asserts that no exception is raised
         gather_stats(vcore)
 
@@ -1130,23 +1130,23 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 1: SR1 > SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 3
-        vcore.scalar_register_file[1] = 1
+        vcore.scalar_register_file[1] = 3
+        vcore.scalar_register_file[2] = 1
         vcore.run()  # asserts that no exception is raised
         gather_stats(vcore)
         # case 2: SR1 = SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 2
         vcore.scalar_register_file[1] = 2
+        vcore.scalar_register_file[2] = 2
         with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
             vcore.run()
         gather_stats(vcore)
         # case 3: SR1 < SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 1
-        vcore.scalar_register_file[1] = 3
+        vcore.scalar_register_file[1] = 1
+        vcore.scalar_register_file[2] = 3
         with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
             vcore.run()
         gather_stats(vcore)
@@ -1167,24 +1167,24 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 1: SR1 > SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 3
-        vcore.scalar_register_file[1] = 1
+        vcore.scalar_register_file[1] = 3
+        vcore.scalar_register_file[2] = 1
         with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
             vcore.run()
         gather_stats(vcore)
         # case 2: SR1 = SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 2
         vcore.scalar_register_file[1] = 2
+        vcore.scalar_register_file[2] = 2
         with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
             vcore.run()
         gather_stats(vcore)
         # case 3: SR1 < SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 1
-        vcore.scalar_register_file[1] = 3
+        vcore.scalar_register_file[1] = 1
+        vcore.scalar_register_file[2] = 3
         vcore.run()  # asserts that no exception is raised
         gather_stats(vcore)
 
@@ -1204,22 +1204,22 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 1: SR1 > SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 3
-        vcore.scalar_register_file[1] = 1
+        vcore.scalar_register_file[1] = 3
+        vcore.scalar_register_file[2] = 1
         vcore.run()  # asserts that no exception is raised
         gather_stats(vcore)
         # case 2: SR1 = SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 2
         vcore.scalar_register_file[1] = 2
+        vcore.scalar_register_file[2] = 2
         vcore.run()  # asserts that no exception is raised
         gather_stats(vcore)
         # case 3: SR1 < SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 1
-        vcore.scalar_register_file[1] = 3
+        vcore.scalar_register_file[1] = 1
+        vcore.scalar_register_file[2] = 3
         with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
             vcore.run()
         gather_stats(vcore)
@@ -1240,23 +1240,23 @@ class TestSingleInstruction(BaseTestWithTempDir):
         # case 1: SR1 > SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 3
-        vcore.scalar_register_file[1] = 1
+        vcore.scalar_register_file[1] = 3
+        vcore.scalar_register_file[2] = 1
         with self.assertRaisesRegex(RuntimeError, "Unknown instruction"):
             vcore.run()
         gather_stats(vcore)
         # case 2: SR1 = SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 2
         vcore.scalar_register_file[1] = 2
+        vcore.scalar_register_file[2] = 2
         vcore.run()  # asserts that no exception is raised
         gather_stats(vcore)
         # case 3: SR1 < SR2
         vcore = get_core(self.temp_dir, self.temp_dir,
                          f"single_instr_test_{instruction}")
-        vcore.scalar_register_file[0] = 1
-        vcore.scalar_register_file[1] = 3
+        vcore.scalar_register_file[1] = 1
+        vcore.scalar_register_file[2] = 3
         vcore.run()  # asserts that no exception is raised
         gather_stats(vcore)
 
@@ -1346,8 +1346,8 @@ class TestIntegratedSmallProgram(BaseTestWithTempDir):
 
         vcore.run()
 
-        self.assertEqual(5, vcore.SR7)
-        self.assertEqual(-5, vcore.SR8)
+        self.assertEqual(5, vcore.SR6)
+        self.assertEqual(-5, vcore.SR7)
 
         gather_stats(vcore)
 
