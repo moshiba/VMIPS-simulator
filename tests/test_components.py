@@ -1,5 +1,7 @@
 """Test component functionality like operations and load/dump format
 """
+import array
+import operator
 import pathlib
 import unittest
 
@@ -140,3 +142,93 @@ class TestProcessorCore(BaseTestWithTempDir):
         # Test property read
         vcore.program_counter += 7
         self.assertEqual(15, vcore.PC)
+
+
+class TestPythonOperators(unittest.TestCase):
+
+    def test_numbers(self):
+        # positive
+        a = operator.xor(0xFFFF_FFFF, 0x00FF00FF)
+        b = 0xFF00FF00
+        self.assertEqual(a, b)
+
+        #
+        """ for bitwise operations
+        can think of it like having a 64 bit container, so it's usually bit-extended way over
+        just &0xFFFF_FFFF to get the 32-bit part I want
+        """
+        # negative
+        c = -1 & 0xFFFF_FFFF
+        d = 0xFFFF_FFFF
+        self.assertEqual(c, d)
+
+    def test_logical_right_shift(self):
+        # positive
+        a = None
+        b = None
+        self.assertEqual(a, b)
+
+        # negative
+        #c = operator.rshift(-1, 4) & 0xFFFF_FFFF
+        #d = operator.rshift(0xFFFF_FFFF, 4) & 0xFFFF_FFFF
+        #self.assertEqual(d, 0x0FFF_FFFF)
+        #self.assertEqual(c, d)
+        c = (-1 % 0x1_0000_0000) >> 4
+        self.assertEqual(c, 0x0FFF_FFFF)
+        d = operator.rshift(-1 % 0x1_0000_0000, 4)
+        self.assertEqual(d, 0x0FFF_FFFF)
+
+        self.assertEqual(-240 % 0x1_0000_0000, 0xFFFF_FF10)
+        self.assertEqual(-240 & 0xFFFF_FFFF, 0xFFFF_FF10)
+        e = operator.rshift(-240 % 0x1_0000_0000, 4)
+        self.assertEqual(e, 0x0FFF_FFF1)
+
+        # TODO: verdict : &0xFFFF_FFFF BEFORE SHIFT to get logical-right-shift
+
+    def test_logical_left_shift(self):
+        # negative
+        c = operator.lshift(-1, 4) & 0xFFFF_FFFF
+        self.assertEqual(c, 0xFFFF_FFF0)
+        d = operator.lshift(-240, 4) & 0xFFFF_FFFF
+        self.assertEqual(d, 0xFFFF_F100)
+
+    def test_arithmetic_right_shift(self):
+        # positive
+        a = operator.rshift(0xF0, 4) & 0xFFFF_FFFF  # no need to be masked
+        self.assertEqual(a, 0x0000_000F)
+
+        # negative  # NOTE: MUST MASK
+        c = operator.rshift(-4, 1) & 0xFFFF_FFFF  # NOTE: MUST MASK
+        self.assertEqual(c, 0xFFFF_FFFE)
+        # -240 (-0xF0): 2's-comp : 0xFFFF_FF10
+        e = operator.rshift(-240, 4) & 0xFFFF_FFFF  # NOTE: MUST MASK
+        self.assertEqual(e, 0xFFFF_FFF1)
+        f = operator.rshift(0xFFFF_FFFF, 4) & 0xFFFF_FFFF
+        self.assertEqual(f, 0x0FFF_FFFF)
+
+        # TODO: verdict: MASK RESULTS OF arithmetic-right-shift
+
+
+class TestArray(unittest.TestCase):
+
+    def test_array(self):
+        self.assertEqual(4, array.array("i").itemsize)
+        self.assertEqual(8, array.array("l").itemsize)
+
+        with self.assertRaisesRegex(OverflowError,
+                                    "signed integer is greater than maximum"):
+            return array.array("i", [2147483647, 2147483648, -1, -2147483648])
+
+        with self.assertRaisesRegex(OverflowError,
+                                    "signed integer is less than minimum"):
+            return array.array("i", [2147483647, 1, -1, -2147483649])
+
+        sint32_array = array.array("i", [2147483647, 1, -1, -2147483648])
+        print()
+        print(f"{sint32_array = }")
+        print(f"{sint32_array.tolist() = }")
+        print(f"{sint32_array.tobytes() = }")
+        print(f"{sint32_array[0] = }")
+        print(f"{type(sint32_array[0]) = }")
+        print(f"{sint32_array[3] = }")
+        print(f"{type(sint32_array[3]) = }")
