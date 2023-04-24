@@ -746,6 +746,7 @@ class Core:
             if self.PC + 1 < len(self.instruction_mem.instructions):
                 self.PC += 1
             else:
+                # Automatically stops after stepping over the last line
                 self.freeze = True
 
     def step_instr(self):
@@ -755,12 +756,13 @@ class Core:
         # Skip non-statement lines
         next_line = self.instruction_mem.instructions[self.PC]
         next_instruction = self.decode(next_line)["instruction"]
+        # FIXME: does prefetch/predecode next line causes index problems?
         while next_instruction is None:
             self.step()
             next_line = self.instruction_mem.instructions[self.PC]
             next_instruction = self.decode(next_line)["instruction"]
 
-        self.step()  # Execute the next line, which will not by empty or comment
+        self.step()  # Execute the next line, which will not be empty or comment
 
     def run(self):
         while self.freeze is not True:
