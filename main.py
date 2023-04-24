@@ -555,7 +555,11 @@ class ALU:
                 # Generalize basic vector load-stores as stride=1
                 stride = srf[self.reg_index(
                     instruction["operand3"])] if strided else 1
-                offsets = list(range(0, vrf.vec_size * stride, stride))
+                if stride == 0:
+                    # special case that spreads a single value from vector mem to the entire vector register
+                    offsets = list([0] * vrf.vec_size)
+                else:
+                    offsets = list(range(0, vrf.vec_size * stride, stride))
             elif mem_type == "VI":  # gather/scatter
                 offsets = vrf[self.reg_index(instruction["operand3"])]
             else:
