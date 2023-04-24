@@ -311,7 +311,7 @@ class DataMemory(FileMap):
         assert upper_index < self.size_limit, "address too large"
 
         self.__data[key] = value
-        dprint(bgcolor("blue")(f"{self.type}mem write"),
+        dprint(bgcolor("red")(f"{self.type}mem write"),
                f"0x{lower_index:010_d} = {self.__data[key]}",
                debug_level=2)
 
