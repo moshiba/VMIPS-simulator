@@ -106,10 +106,10 @@ class SignedInt32Array(StaticLengthArray):
         super().__init__(s32_array, container_type=lambda x: x)
 
     def __setitem__(self, index, value):
-        assert self.size == len(self), f"{self.size}!={len(self)}"
         if isinstance(index, slice):
             value = array.array(self.type_code, value)  # type cast
         super().__setitem__(index, value)
+        assert self.size == len(self), f"{self.size}!={len(self)}"
 
     def __eq__(self, other):
         return self._StaticLengthArray__data.tolist() == other
@@ -621,7 +621,6 @@ class ALU:
         else:
             result = operation(operator)
 
-        print(f"{result & 0xFFFF_FFFF = :09_X}")
         # handle OverflowError
         if op_code == "lshift":
             negative = result & (1 << 31)
