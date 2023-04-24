@@ -11,6 +11,7 @@ import itertools
 import operator
 import os
 import pathlib
+import pprint
 import re
 import typing
 
@@ -801,6 +802,22 @@ class Core:
     )
 
 
+class Config:
+    """Configuration holder class
+    """
+
+    def __init__(self, cfg_file: pathlib.Path):
+        assert cfg_file.is_file()
+        with cfg_file.open(mode="r", encoding="ascii") as cfg:
+            self.parameters = {
+                key: int(val) for key, val in re.findall(
+                    r"^(\w+)\s*=\s*(\d+)", cfg.read(), re.MULTILINE)
+            }
+
+        print("Config parameters:")
+        pprint.pprint(self.parameters, sort_dicts=False)
+
+
 if __name__ == "__main__":
     # Parse arguments for input file location
     parser = argparse.ArgumentParser(
@@ -816,6 +833,13 @@ if __name__ == "__main__":
 
     io_dir = pathlib.Path(parsed_args.iodir).absolute()
     print("IO Directory:", io_dir)
+    if not (config_file := io_dir / "Config.txt").is_file():
+        print("\n" + "-" * 16)
+        print(f"Couldn't find config file at {config_file!s}")
+        config_file = pathlib.Path.cwd() / "Config.txt"
+        print(f"Falling back to default config file at {config_file!s}")
+        print("-" * 16 + "\n")
+    config = Config(config_file)
 
     vcore = Core(
         scalar_register_file=RegisterFile(dump_path=io_dir / "SRF.txt",
