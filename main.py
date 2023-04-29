@@ -331,6 +331,44 @@ class DataMemory(FileMap):
         self.__data.extend(0x0 for word in range(self.size_limit - n_words))
 
 
+class InstructionType:
+
+    def __init__(self, operands, result):
+        self.operands = operands
+        self.result = result
+
+
+class ScalarInstruction(InstructionType):
+    pass
+
+
+class ControlInstruction(ScalarInstruction):
+    pass
+
+
+class VectorComputeInstruction(InstructionType):
+    pass
+
+
+class VectorMemoryInstruction(InstructionType):
+
+    def __init__(self, operands, result, target_addrs):
+        super().__init__(operands, result)
+        self.target_addrs = target_addrs
+
+
+class VectorMultiplyInstruction(VectorComputeInstruction):
+    pass
+
+
+class VectorAddSubInstruction(VectorComputeInstruction):
+    pass
+
+
+class VectorDivideInstruction(VectorComputeInstruction):
+    pass
+
+
 class InstructionMemory(FileMap):
     """Configurable instruction memory
     """
@@ -399,6 +437,7 @@ class ALU:
 
     def __init__(self, core):
         self.core = core
+        self.instruction_stream = []  # stores program trace
 
     def do(self, parsed_instruction: re.Match):
         instruction = parsed_instruction["instruction"]
@@ -418,7 +457,10 @@ class ALU:
         func_group = tuple({
             k: v for k, v in functionality.groupdict().items() if v is not None
         })[0]
-        getattr(self, func_group)(functionality, parsed_instruction)
+        valid_line = getattr(self, func_group)(functionality,
+                                               parsed_instruction)
+        assert valid_line is not None
+        self.instruction_stream.append(valid_line)
 
     @classmethod
     def reg_index(cls, register_token):
@@ -462,6 +504,17 @@ class ALU:
         vrf[self.reg_index(instruction["operand1"]
                           )][:vrf.vector_length_register] = masked_values
 
+        if op_code == "mul":
+            instr_cls = VectorMultiplyInstruction
+        elif op_code == "floordiv":
+            instr_cls = VectorDivideInstruction
+        elif op_code in ["add", "sub"]:
+            instr_cls = VectorAddSubInstruction
+        else:
+            raise RuntimeError(f"unknown op_code: {op_code}")
+        return instr_cls([instruction["operand2"], instruction["operand3"]],
+                         instruction["operand1"])
+
     def vec_mask_reg(self, functionality, instruction):
         # Aliases
         srf = self.core.scalar_register_file
@@ -473,10 +526,12 @@ class ALU:
             # in order to retain custom 'StaticLengthArray' type
             vrf.vector_mask_register[:] = [1] * vrf.vec_size
             assert isinstance(vrf.vector_mask_register, StaticLengthArray)
+            return ScalarInstruction([], None)
 
         elif functionality["count_mask"]:  # POP
             srf[self.reg_index(
                 instruction["operand1"])] = vrf.vector_mask_register.count(1)
+            return ScalarInstruction([], instruction["operand1"])
 
         elif (op_code := functionality["mask_condition"]) and (
                 mask_type := functionality["mask_type"]):  # S__VV and S__VS
@@ -499,6 +554,8 @@ class ALU:
                 int(bool(value)) for value in map(operation, operand1, operand2)
             ]
             assert isinstance(vrf.vector_mask_register, StaticLengthArray)
+            return ScalarInstruction(
+                [instruction["operand1"], instruction["operand2"]], None)
 
         else:
             raise RuntimeError("Unknown vector mask register instruction:",
@@ -515,10 +572,12 @@ class ALU:
             value = srf[self.reg_index(instruction["operand1"])]
             assert 0 <= value <= vrf.vec_size, "illegal vector length"
             vrf.vector_length_register = value
+            return ScalarInstruction([instruction["operand1"]], None)
 
         elif mode == "F":  # MFCL
             srf[self.reg_index(
                 instruction["operand1"])] = vrf.vector_length_register
+            return ScalarInstruction([], instruction["operand1"])
 
         else:
             raise RuntimeError("Unknown vector length register instruction:",
@@ -549,6 +608,9 @@ class ALU:
                 base_address = srf[self.reg_index(instruction["operand2"])]
                 value = srf[self.reg_index(instruction["operand1"])]
                 smem[base_address + immediate] = value
+
+            return ScalarInstruction([instruction["operand2"]],
+                                     instruction["operand1"])
 
         elif mem_type.startswith("V"):  # vector
             # Generalize all vector load-stores as scatter/gather
@@ -591,6 +653,13 @@ class ALU:
                     enable = vrf.vector_mask_register[lane]
                     if enable:
                         vmem[base_address + offset] = values[lane]
+
+            return VectorMemoryInstruction(
+                [instruction["operand2"]] if mem_type == "V" else
+                [instruction["operand2"], instruction["operand3"]],
+                instruction["operand1"],
+                [(base_address + offset) for offset in offsets],
+            )
 
         else:
             raise RuntimeError("Unknown memory operation instruction:",
@@ -638,6 +707,9 @@ class ALU:
             else:
                 result &= 0xFFFF_FFFF
         srf[self.reg_index(instruction["operand1"])] = result
+        return ScalarInstruction(
+            [instruction["operand2"], instruction["operand3"]],
+            instruction["operand1"])
 
     def control(self, functionality, instruction):
         # Aliases
@@ -663,9 +735,13 @@ class ALU:
             # Branch not taken
             pass
 
+        return ControlInstruction(
+            [instruction["operand1"], instruction["operand2"]], None)
+
     def stop(self, functionality, instruction):
         # Halt
         self.core.freeze = True
+        return ScalarInstruction([], None)
 
 
 class Core:
@@ -725,6 +801,7 @@ class Core:
 
     @classmethod
     def decode(cls, statement):
+        # TODO: test: parse then reconstruct, to check if operand parsing order is correct (if operand-1 is parsed as operand-3)
         tokens = cls._instruction_decoder_regex.match(statement)
         return tokens
 
@@ -767,7 +844,11 @@ class Core:
 
     def run(self):
         while self.freeze is not True:
-            self.step()
+            # TODO: count instructions as they flow pass
+            self.step_instr()
+
+        # Reconstruct timing simulation after halting
+        self.alu.instruction_stream
 
     def dump(self, path: pathlib.Path = None):
         self.scalar_register_file.dump(path)
@@ -816,6 +897,7 @@ class Config:
 
         print("Config parameters:")
         pprint.pprint(self.parameters, sort_dicts=False)
+        print()
 
 
 if __name__ == "__main__":
