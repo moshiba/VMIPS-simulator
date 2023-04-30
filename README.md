@@ -1,4 +1,12 @@
-# VMIPS functional simulator [![test](https://github.com/HsuanTingLu/VMIPS-functional-simulator/actions/workflows/test.yml/badge.svg)](https://github.com/HsuanTingLu/VMIPS-functional-simulator/actions/workflows/test.yml)
+# VMIPS functional and performance simulator [![test](https://github.com/HsuanTingLu/VMIPS-simulator/actions/workflows/test.yml/badge.svg)](https://github.com/HsuanTingLu/VMIPS-functional-simulator/actions/workflows/test.yml)
+
+The functional/performance simulator provides both correct results and performance info under all parameter configurations.
+
+## How to run:
+```bash
+python3 main.py --iodir <iodir>
+```
+
 
 ## Dependencies
 No third party libraries needed, although pytest could be used to select test cases with regular expression.
