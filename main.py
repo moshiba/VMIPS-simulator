@@ -855,8 +855,8 @@ class Core:
         while self.freeze is not True:
             # TODO: count instructions as they flow pass
             self.step_instr()
-
-        self.measure_time_spent()
+        if "config" in globals():
+            self.measure_time_spent()
 
     def measure_time_spent(self):
         """Reconstruct timing simulation after halting
