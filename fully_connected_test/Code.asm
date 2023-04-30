@@ -37,11 +37,11 @@ LVWS  VR0 SR6 SR0  # load input elements
 LVWS  VR1 SR7 SR2  # load weight elements segment 1
 ADD   SR7 SR7 SR4  # weight elements pointer += segment stride
 LVWS  VR2 SR7 SR2  # load weight elements segment 2
-ADD   SR7 SR7 SR4  # weight elements pointer += segment stride
 MULVV VR1 VR1 VR0  # multiply segment 1
 ADDVV VR4 VR4 VR1  # accumulate segment 1
 MULVV VR2 VR2 VR0  # multiply segment 2
 ADDVV VR5 VR5 VR2  # accumulate segment 2
+ADD   SR7 SR7 SR4  # weight elements pointer += segment stride
 LVWS  VR1 SR7 SR2  # load weight elements segment 3
 ADD   SR7 SR7 SR4  # weight elements pointer += segment stride
 LVWS  VR2 SR7 SR2  # load weight elements segment 4
