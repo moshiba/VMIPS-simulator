@@ -1211,8 +1211,8 @@ class Core:
             assert VectorFunctionalUnit.divide.full()
             assert all(map(lambda x: x.full(), MemoryController.banks.values()))
 
-            print(f"time: {cycle_counter} cycles")
-            print(
+            dprint(f"time: {cycle_counter} cycles")
+            dprint(
                 "instr done: "
                 f"{retired_instruction_count}/{len(instruction_stream)} "
                 f"({100*retired_instruction_count/len(instruction_stream):.2f}%)"
