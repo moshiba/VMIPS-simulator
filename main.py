@@ -12,6 +12,7 @@ import operator
 import os
 import pathlib
 import pprint
+import queue
 import re
 import typing
 
@@ -334,8 +335,11 @@ class DataMemory(FileMap):
 class InstructionType:
 
     def __init__(self, operands, result):
-        self.operands = operands
-        self.result = result
+        # Registers that will be read by this instruction
+        self.operands: set[str] = set(operands)
+
+        # Registers that will be written by this instruction
+        self.result: str = result
 
 
 class ScalarInstruction(InstructionType):
@@ -347,14 +351,17 @@ class ControlInstruction(ScalarInstruction):
 
 
 class VectorComputeInstruction(InstructionType):
-    pass
+    # TODO: depends on VLR and VMR but latches them upon dispatch, doesn't need them after this
+    def __init__(self, operands, result, vec_len):
+        super().__init__(operands, result)
+        self.vec_len = vec_len
 
 
 class VectorMemoryInstruction(InstructionType):
 
     def __init__(self, operands, result, target_addrs):
         super().__init__(operands, result)
-        self.target_addrs = target_addrs
+        self.target_addrs: list[int] = list(target_addrs)
 
 
 class VectorMultiplyInstruction(VectorComputeInstruction):
@@ -464,7 +471,6 @@ class ALU:
 
     @classmethod
     def reg_index(cls, register_token):
-        # FIXME: remove legacy index translation
         """Helper method to extract register index from assembly
         for example: SR2->1
         """
@@ -512,8 +518,9 @@ class ALU:
             instr_cls = VectorAddSubInstruction
         else:
             raise RuntimeError(f"unknown op_code: {op_code}")
-        return instr_cls([instruction["operand2"], instruction["operand3"]],
-                         instruction["operand1"])
+        return instr_cls(
+            ["VLR", "VMR", instruction["operand2"], instruction["operand3"]],
+            instruction["operand1"], vrf.vector_length_register)
 
     def vec_mask_reg(self, functionality, instruction):
         # Aliases
@@ -526,12 +533,12 @@ class ALU:
             # in order to retain custom 'StaticLengthArray' type
             vrf.vector_mask_register[:] = [1] * vrf.vec_size
             assert isinstance(vrf.vector_mask_register, StaticLengthArray)
-            return ScalarInstruction([], None)
+            return ScalarInstruction([], "VMR")
 
         elif functionality["count_mask"]:  # POP
             srf[self.reg_index(
                 instruction["operand1"])] = vrf.vector_mask_register.count(1)
-            return ScalarInstruction([], instruction["operand1"])
+            return ScalarInstruction(["VMR"], instruction["operand1"])
 
         elif (op_code := functionality["mask_condition"]) and (
                 mask_type := functionality["mask_type"]):  # S__VV and S__VS
@@ -555,7 +562,7 @@ class ALU:
             ]
             assert isinstance(vrf.vector_mask_register, StaticLengthArray)
             return ScalarInstruction(
-                [instruction["operand1"], instruction["operand2"]], None)
+                [instruction["operand1"], instruction["operand2"]], "VMR")
 
         else:
             raise RuntimeError("Unknown vector mask register instruction:",
@@ -572,12 +579,12 @@ class ALU:
             value = srf[self.reg_index(instruction["operand1"])]
             assert 0 <= value <= vrf.vec_size, "illegal vector length"
             vrf.vector_length_register = value
-            return ScalarInstruction([instruction["operand1"]], None)
+            return ScalarInstruction([instruction["operand1"]], "VLR")
 
         elif mode == "F":  # MFCL
             srf[self.reg_index(
                 instruction["operand1"])] = vrf.vector_length_register
-            return ScalarInstruction([], instruction["operand1"])
+            return ScalarInstruction(["VLR"], instruction["operand1"])
 
         else:
             raise RuntimeError("Unknown vector length register instruction:",
@@ -654,11 +661,13 @@ class ALU:
                     if enable:
                         vmem[base_address + offset] = values[lane]
 
+            dependencies = ["VLR", "VMR", instruction["operand2"]]
+            if mem_type != "V":
+                dependencies.append(instruction["operand3"])
             return VectorMemoryInstruction(
-                [instruction["operand2"]] if mem_type == "V" else
-                [instruction["operand2"], instruction["operand3"]],
+                dependencies,
                 instruction["operand1"],
-                [(base_address + offset) for offset in offsets],
+                [(base_address + offset) for offset in offsets][:vector_length],
             )
 
         else:
@@ -847,8 +856,382 @@ class Core:
             # TODO: count instructions as they flow pass
             self.step_instr()
 
-        # Reconstruct timing simulation after halting
-        self.alu.instruction_stream
+        self.measure_time_spent()
+
+    def measure_time_spent(self):
+        """Reconstruct timing simulation after halting
+        Schedule instructions at the DecodeStage instead of FetchStage, and
+        drives functional units with an event based framework
+        """
+        instruction_stream = self.alu.instruction_stream
+        n_banks = config.parameters["vdmNumBanks"]
+        n_lanes = config.parameters["numLanes"]
+
+        print(f"instructions executed: {len(instruction_stream)}")
+
+        # Scoreboard: instruction/functional units/register status
+        class Scoreboard:
+            register: dict[str, bool] = {
+                "VLR": False,
+                "VMR": False
+            } | {
+                f"SR{key}": False
+                for key in range(self.scalar_register_file.n_reg)
+            } | {
+                f"VR{key}": False
+                for key in range(self.vector_register_file.n_reg)
+            }
+
+            functional_unit: dict[str, bool] = {
+                key: None
+                for key in ("vec_addsub", "vec_mul", "vec_div", "vec_mem")
+            }
+
+            instruction: dict[int, InstructionType] = {}
+
+        class DispatchQueue:
+            scalar_q = queue.Queue(maxsize=1)
+            vector_compute_q = queue.Queue(
+                maxsize=config.parameters["computeQueueDepth"])
+            vector_mem_q = queue.Queue(
+                maxsize=config.parameters["dataQueueDepth"])
+
+        ScalarFunctionalUnit = queue.Queue(maxsize=1)
+
+        class VectorFunctionalUnit:
+            addsub = queue.Queue(maxsize=config.parameters["pipelineDepthAdd"])
+            multiply = queue.Queue(
+                maxsize=config.parameters["pipelineDepthMul"])
+            divide = queue.Queue(maxsize=config.parameters["pipelineDepthDiv"])
+
+        class MemoryController:
+            banks = {
+                idx: queue.Queue(maxsize=config.parameters["vlsPipelineDepth"])
+                for idx in range(n_banks)
+            }
+            busy_counter = {idx: 0 for idx in range(n_banks)}
+
+        # Prefill with empty bubbles
+        for pipeline in [
+                VectorFunctionalUnit.addsub,
+                VectorFunctionalUnit.multiply,
+                VectorFunctionalUnit.divide,
+                ScalarFunctionalUnit,
+        ]:
+            for i in range(pipeline.maxsize):
+                pipeline.put_nowait(None)
+        for bank_idx in MemoryController.banks:
+            for i in range(config.parameters["vlsPipelineDepth"]):
+                MemoryController.banks[bank_idx].put_nowait(None)
+
+        cycle_counter = 1  # start from 1 in 'Decode' because it's already fetched
+        pseudo_PC = 0
+        retired_instruction_count = 0
+        stall_reason = {
+            DispatchQueue.scalar_q: 0,
+            DispatchQueue.vector_compute_q: 0,
+            DispatchQueue.vector_mem_q: 0,
+            "other": 0,
+        }
+
+        while retired_instruction_count < len(instruction_stream):
+            if pseudo_PC < len(instruction_stream):
+                instruction = instruction_stream[pseudo_PC]
+            else:
+                # Insert bubbles until the simulation finishes
+                instruction = ScalarInstruction([], None)
+                dprint(bgcolor("cyan")("(insert EMPTY instruction)"))
+            dprint(
+                bgcolor("bright_black")(f"{pseudo_PC}" + color("bright_cyan")
+                                        (instruction.__class__.__name__)))
+            dprint("\toperands:", sorted(instruction.operands))
+            dprint("\tresult:", instruction.result)
+            if isinstance(instruction, VectorComputeInstruction):
+                dprint("\tvecLen:", instruction.vec_len)
+            if isinstance(instruction, VectorMemoryInstruction):
+                dprint("\tvecLen:", len(instruction.target_addrs))
+                dprint("\taddr:", instruction.target_addrs)
+                dprint("\tmem bank:",
+                       [x % n_banks for x in instruction.target_addrs])
+
+            # Start updating status from the end of the pipeline first
+            # Update functional unit pipelines
+            if (scalar_result := ScalarFunctionalUnit.get_nowait()) is not None:
+                # Do useful work
+                # Then
+                dprint(bgcolor("green")(f"retire {scalar_result}"))
+                retired_instruction_count += 1
+
+            vec_addsub_result = VectorFunctionalUnit.addsub.get_nowait()
+            if (vec_addsub_instr_id := Scoreboard.functional_unit["vec_addsub"]
+               ) is not None:  # in use
+                # Check if work is done
+                pipe_tasks = set(VectorFunctionalUnit.addsub.queue)
+                if vec_addsub_result == vec_addsub_instr_id and len(
+                        pipe_tasks) == 1 and None in pipe_tasks:
+                    Scoreboard.functional_unit["vec_addsub"] = None
+                    dprint(bgcolor("green")(f"retire {vec_addsub_instr_id}"))
+                    retired_instruction_count += 1
+                else:
+                    if instruction_stream[vec_addsub_instr_id].vec_len > 0:
+                        VectorFunctionalUnit.addsub.put_nowait(
+                            vec_addsub_instr_id)
+                        instruction_stream[
+                            vec_addsub_instr_id].vec_len -= n_lanes
+                    else:
+                        VectorFunctionalUnit.addsub.put_nowait(None)
+
+            vec_mul_result = VectorFunctionalUnit.multiply.get_nowait()
+            if (vec_mul_instr_id := Scoreboard.functional_unit["vec_mul"]
+               ) is not None:  # in use
+                # Check if work is done
+                pipe_tasks = set(VectorFunctionalUnit.multiply.queue)
+                if vec_mul_result == vec_mul_instr_id and len(
+                        pipe_tasks) == 1 and None in pipe_tasks:
+                    Scoreboard.functional_unit["vec_mul"] = None
+                    dprint(bgcolor("green")(f"retire {vec_mul_instr_id}"))
+                    retired_instruction_count += 1
+                else:
+                    if instruction_stream[vec_mul_instr_id].vec_len > 0:
+                        VectorFunctionalUnit.multiply.put_nowait(
+                            vec_mul_instr_id)
+                        instruction_stream[vec_mul_instr_id].vec_len -= n_lanes
+                    else:
+                        VectorFunctionalUnit.multiply.put_nowait(None)
+
+            vec_div_result = VectorFunctionalUnit.divide.get_nowait()
+            if (vec_div_instr_id := Scoreboard.functional_unit["vec_div"]
+               ) is not None:  # in use
+                # Check if work is done
+                pipe_tasks = set(VectorFunctionalUnit.divide.queue)
+                if vec_div_result == vec_div_instr_id and len(
+                        pipe_tasks) == 1 and None in pipe_tasks:
+                    Scoreboard.functional_unit["vec_div"] = None
+                    dprint(bgcolor("green")(f"retire {vec_div_instr_id}"))
+                    retired_instruction_count += 1
+                else:
+                    if instruction_stream[vec_div_instr_id].vec_len > 0:
+                        VectorFunctionalUnit.divide.put_nowait(vec_div_instr_id)
+                        instruction_stream[vec_div_instr_id].vec_len -= n_lanes
+                    else:
+                        VectorFunctionalUnit.divide.put_nowait(None)
+
+            mem_results = [
+                MemoryController.banks[bank_idx].get_nowait()
+                for bank_idx in MemoryController.banks
+            ]
+
+            if (vector_mem_id := Scoreboard.functional_unit["vec_mem"]
+               ) is not None:  # in use
+                # Check if work is done
+                pipe_tasks = set(
+                    itertools.chain.from_iterable(
+                        bank.queue for bank in MemoryController.banks.values()))
+                if vector_mem_id in mem_results and len(
+                        pipe_tasks) == 1 and None in pipe_tasks:
+                    Scoreboard.functional_unit["vec_mem"] = None
+                    dprint(bgcolor("green")(f"retire {vector_mem_id}"))
+                    retired_instruction_count += 1
+                else:
+                    for bank_idx in MemoryController.banks:
+                        if MemoryController.busy_counter[bank_idx] > 0:
+                            MemoryController.banks[bank_idx].put_nowait(
+                                vector_mem_id)
+                            MemoryController.busy_counter[bank_idx] -= 1
+                        else:
+                            pass  # Take new requests from dispatch queue later
+
+            # Each dispatch queue can issue one instruction per cycle
+            # Dispatch if there's no structural hazard
+            # NOTE: baseline uArch does not allow instruction overlapping
+            if not DispatchQueue.scalar_q.empty():
+                ScalarFunctionalUnit.put_nowait(
+                    DispatchQueue.scalar_q.get_nowait())
+            else:
+                if not ScalarFunctionalUnit.full():
+                    ScalarFunctionalUnit.put_nowait(None)
+
+            if not DispatchQueue.vector_compute_q.empty():
+                # Check for structural hazards
+                vec_instr_id = DispatchQueue.vector_compute_q.queue[0]
+                vec_instr = instruction_stream[vec_instr_id]
+                if isinstance(vec_instr, VectorAddSubInstruction):
+                    if not VectorFunctionalUnit.addsub.full():
+                        if Scoreboard.functional_unit["vec_addsub"] is None:
+                            DispatchQueue.vector_compute_q.get_nowait()
+                            VectorFunctionalUnit.addsub.put_nowait(vec_instr_id)
+                            Scoreboard.functional_unit[
+                                "vec_addsub"] = vec_instr_id
+                            vec_instr.vec_len -= n_lanes
+                        else:
+                            VectorFunctionalUnit.addsub.put_nowait(None)
+                elif isinstance(vec_instr, VectorMultiplyInstruction):
+                    if not VectorFunctionalUnit.multiply.full():
+                        if Scoreboard.functional_unit["vec_mul"] is None:
+                            DispatchQueue.vector_compute_q.get_nowait()
+                            VectorFunctionalUnit.multiply.put_nowait(
+                                vec_instr_id)
+                            Scoreboard.functional_unit["vec_mul"] = vec_instr_id
+                            vec_instr.vec_len -= n_lanes
+                        else:
+                            VectorFunctionalUnit.multiply.put_nowait(None)
+                elif isinstance(vec_instr, VectorDivideInstruction):
+                    if not VectorFunctionalUnit.divide.full():
+                        if Scoreboard.functional_unit["vec_div"] is None:
+                            DispatchQueue.vector_compute_q.get_nowait()
+                            VectorFunctionalUnit.divide.put_nowait(vec_instr_id)
+                            Scoreboard.functional_unit["vec_div"] = vec_instr_id
+                            vec_instr.vec_len -= n_lanes
+                        else:
+                            VectorFunctionalUnit.divide.put_nowait(None)
+            # Filling in the pipeline
+            dprint("\t" + bgcolor("yellow")("fill pipeline with bubble"))
+            for name, pipeline in {
+                    "addsub FU pipe": VectorFunctionalUnit.addsub,
+                    "mul    FU pipe": VectorFunctionalUnit.multiply,
+                    "div    FU pipe": VectorFunctionalUnit.divide
+            }.items():
+                dprint("\t\t" + bgcolor("yellow")(f"{name}:{pipeline.qsize()}"),
+                       end="")
+                if not pipeline.full():
+                    pipeline.put_nowait(None)
+                    dprint(bgcolor("green")(f"->{pipeline.qsize()}"), end="")
+                dprint()
+
+            banks = MemoryController.banks
+            busy_counter = MemoryController.busy_counter
+            if not DispatchQueue.vector_mem_q.empty():
+                # TODO: FIXME:
+                mem_instr_id = DispatchQueue.vector_mem_q.queue[0]
+                mem_instr = instruction_stream[mem_instr_id]
+
+                # Special optimization to reduce bank conflicts:
+                # Send only 1 memory request if stride=0
+                if config.parameters["smartVectorMemoryStride"]:
+                    if len(set(mem_instr.target_addrs)) == 1:
+                        mem_instr.target_addrs = mem_instr.target_addrs[:1]
+
+                if (Scoreboard.functional_unit["vec_mem"] is None):
+                    # Start new instruction
+                    DispatchQueue.vector_mem_q.get_nowait()
+                    Scoreboard.functional_unit["vec_mem"] = mem_instr_id
+                    # Try to send the top <numLane> requests
+                    requests = mem_instr.target_addrs[:n_lanes]
+                    for addr in requests:  # Try to place individual requests
+                        bank_addr = addr % n_banks
+                        if busy_counter[bank_addr]:
+                            # Bank busy with its previous request
+                            pass
+                        else:
+                            # Bank free, place request
+                            if not banks[bank_addr].full():
+                                banks[bank_addr].put_nowait(mem_instr_id)
+                                busy_counter[bank_addr] = config.parameters[
+                                    "bankbusytime"] - 1
+                                mem_instr.target_addrs.remove(addr)
+                else:
+                    # Send requests from the current instruction
+                    current_instr_idx = Scoreboard.functional_unit["vec_mem"]
+                    current_instr = instruction_stream[current_instr_idx]
+                    # Try to send the top <numLane> requests
+                    requests = current_instr.target_addrs[:n_lanes]
+                    for addr in requests:  # Try to place individual requests
+                        bank_addr = addr % n_banks
+                        if busy_counter[bank_addr]:
+                            # Bank busy with its previous request
+                            pass
+                        else:
+                            # Bank free, place request
+                            if not banks[bank_addr].full():
+                                banks[bank_addr].put_nowait(current_instr_idx)
+                                busy_counter[bank_addr] = config.parameters[
+                                    "bankbusytime"] - 1
+                                current_instr.target_addrs.remove(addr)
+
+            # Fill in bubbles
+            for bank in MemoryController.banks.values():
+                if not bank.full():
+                    bank.put_nowait(None)
+
+            dprint("@")
+            dprint("ds <-", list(DispatchQueue.scalar_q.queue))
+            dprint("dv <-", list(DispatchQueue.vector_compute_q.queue))
+            dprint("dm <-", list(DispatchQueue.vector_mem_q.queue))
+            dprint("@@")
+            dprint("ps  ->", list(reversed(ScalarFunctionalUnit.queue)))
+            dprint("pva ->", list(reversed(VectorFunctionalUnit.addsub.queue)))
+            dprint("pvm ->",
+                   list(reversed(VectorFunctionalUnit.multiply.queue)))
+            dprint("pvd ->", list(reversed(VectorFunctionalUnit.divide.queue)))
+            dprint("pM  -> ", end="")
+            for bank_idx, bank in MemoryController.banks.items():
+                dprint(
+                    f"{'' if bank_idx == 0 else ' '*7}<{bank_idx:2d}> "
+                    f"({'busy' if MemoryController.busy_counter[bank_idx] else 'free'})",
+                    list(reversed(bank.queue)))
+            dprint("@@@")
+
+            # Update decode stage
+            # Check for data hazards
+            if isinstance(instruction, ScalarInstruction):
+                dest_queue = DispatchQueue.scalar_q
+            elif isinstance(instruction, VectorComputeInstruction):
+                dest_queue = DispatchQueue.vector_compute_q
+            elif isinstance(instruction, VectorMemoryInstruction):
+                dest_queue = DispatchQueue.vector_mem_q
+            else:
+                raise RuntimeError("Unknown instruction category: " +
+                                   type(instruction).__name__)
+            if dest_queue.full() or any(Scoreboard.register[operand]
+                                        for operand in instruction.operands):
+                # Stall
+                if dest_queue.full():
+                    dprint(
+                        color("red")(
+                            f"{type(instruction).__name__} queue full"))
+                    stall_reason[dest_queue] += 1
+                if any(Scoreboard.register[operand]
+                       for operand in instruction.operands):
+                    for op in instruction.operands:
+                        if Scoreboard.register[op] is True:
+                            dprint(color("red")(f"{op} is in use"))
+                            # TODO: track and show who is using this register
+                    stall_reason["other"] += 0 if dest_queue.full() else 1
+                dprint(bgcolor("red")(f"stall instr: {pseudo_PC}"))
+            else:
+                # Dispatch instruction
+                dest_queue.put_nowait(pseudo_PC)
+                dprint(bgcolor("blue")(f"dispatch instr: {pseudo_PC}"))
+                pseudo_PC += 1
+
+            # Check if all FU pipelines are filled
+            assert ScalarFunctionalUnit.full()
+            assert VectorFunctionalUnit.addsub.full()
+            assert VectorFunctionalUnit.multiply.full()
+            assert VectorFunctionalUnit.divide.full()
+            assert all(map(lambda x: x.full(), MemoryController.banks.values()))
+
+            print(f"time: {cycle_counter} cycles")
+            print(
+                "instr done: "
+                f"{retired_instruction_count}/{len(instruction_stream)} "
+                f"({100*retired_instruction_count/len(instruction_stream):.2f}%)"
+            )
+            cycle_counter += 1
+
+        print(f"took {cycle_counter} cycles to run program")
+        stall_count = sum(stall_reason.values())
+        print(f"stalled {stall_count} times, "
+              f"{100*stall_count/cycle_counter:.2f}% of execution time")
+        print("stall reason")
+        print("\tscalar queue full: "
+              f"{stall_reason[DispatchQueue.scalar_q]}")
+        print("\tvector compute queue full: "
+              f"{stall_reason[DispatchQueue.vector_compute_q]}")
+        print("\tvector memory queue full: "
+              f"{stall_reason[DispatchQueue.vector_mem_q]}")
+        print("\tother: "
+              f"{stall_reason['other']}")
 
     def dump(self, path: pathlib.Path = None):
         self.scalar_register_file.dump(path)
